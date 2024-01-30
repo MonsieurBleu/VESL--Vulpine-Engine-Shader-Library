@@ -4,10 +4,6 @@
 
 #include SceneDefines3D.glsl
 
-#ifdef ARB_BINDLESS_TEXTURE
-#extension GL_ARB_bindless_texture : require
-#endif
-
 #include uniform/Base3D.glsl
 #include uniform/Model3D.glsl
 #include uniform/Ligths.glsl
@@ -24,7 +20,7 @@ void main() {
     normalComposed = gl_FrontFacing ? normalComposed : -normalComposed;
 
     fragColor.rgb = bColor;
-    fragEmmisive = getStandardEmmisive(fragColor.rgb);
+    fragEmmisive = vec3(0);
 
     fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb) * 0.5 + 0.5;
 }
