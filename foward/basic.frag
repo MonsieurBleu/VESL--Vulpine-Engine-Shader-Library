@@ -1,5 +1,7 @@
 #version 460
 
+#define USING_VERTEX_TEXTURE_UV
+
 #include SceneDefines3D.glsl
 
 #ifdef ARB_BINDLESS_TEXTURE
@@ -10,15 +12,14 @@
 #include uniform/Model3D.glsl
 #include uniform/Ligths.glsl
 
-layout (location = 20, bindless_sampler) uniform vec3 bColor;
+layout(location = 20) uniform vec3 bColor;
 
 #include globals/Fragment3DInputs.glsl
 #include globals/Fragment3DOutputs.glsl
 
 #include functions/standardMaterial.glsl
 
-void main()
-{
+void main() {
     normalComposed = normal;
     normalComposed = gl_FrontFacing ? normalComposed : -normalComposed;
 
