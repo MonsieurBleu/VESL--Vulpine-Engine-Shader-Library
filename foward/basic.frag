@@ -1,6 +1,7 @@
 #version 460
 
 #include SceneDefines3D.glsl
+#define USING_VERTEX_TEXTURE_UV
 
 #ifdef ARB_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
@@ -10,7 +11,7 @@
 #include uniform/Model3D.glsl
 #include uniform/Ligths.glsl
 
-layout (location = 20, bindless_sampler) uniform vec3 bColor;
+layout (location = 20) uniform vec3 bColor;
 
 #include globals/Fragment3DInputs.glsl
 #include globals/Fragment3DOutputs.glsl
