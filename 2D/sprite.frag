@@ -7,6 +7,8 @@ layout (location = 32) uniform vec3 _textColor;
 
 in vec2 atlasUV;
 in vec3 position;
+in flat uint bold;
+in flat uint italic;
 
 float median(float r, float g, float b) {
 	return max(min(r, g), min(max(r, g), b));
@@ -15,6 +17,10 @@ float median(float r, float g, float b) {
 void main()
 {
     vec3 bodyColor = _textColor;
+
+    bodyColor = bold > 0 ? vec3(1, 0, 0) : bodyColor;
+    bodyColor = italic > 0 ? vec3(0, 1, 0) : bodyColor;
+
     vec3 outlineColor = vec3(0.f);
 
     vec4 texel = texture(bAtlas, atlasUV);
