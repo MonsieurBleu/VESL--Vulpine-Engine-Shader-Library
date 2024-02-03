@@ -18,9 +18,8 @@ out flat uint italic;
 
 void main()
 {
-    uint style = bitfieldReverse(_style);
-    bold = (style & 1) == 1 ? 1 : 0;
-    italic = (style & 2) == 2 ? 1 : 0;
+    bold = (_style & 1) == 1 ? 1 : 0;
+    italic = (_style & 2) == 2 ? 1 : 0;
     
     atlasUV = _atlasUV/2048.0;
     atlasUV = vec2(atlasUV.x, 1.f - atlasUV.y);
