@@ -112,9 +112,26 @@ void main()
     _fragColor.rgb = mix(_fragColor.rgb, vignette.rgb, vignetteLerp);
 
 
-/******* DEBUG : Shadow Map Vizualisation *******/
-    // #define SHOW_SHADOWMAP
-    #ifdef SHOW_SHADOWMAP
+/******* DEBUG : Frustum Clusters View 
+    float depth = texture(bDepth, uv).r;
+    const float near = 0.1;
+    const float nbSlice = 8.0;
+    const float vFar = 20.0;
+    const float sSlice = 0.4;
+
+    float k = depth;
+
+    k = 0.001/k;
+    k -= mod(k, 1.0/nbSlice);
+    if(k > 1.0) k = 0.0;
+
+    vec3 kColor = vec3(k);
+    // kColor = hsv2rgb(vec3(k, 1.0, 1.0));
+    if(depth > 0.0)
+    _fragColor.rgb = kColor;
+*******/
+
+/******* DEBUG : Shadow Map Vizualisation 
     vec2 SSMuv = uvScreen * vec2(iResolution) * 1 / 900.0;
     if(SSMuv.x >= 0. && SSMuv.x <= 1.0 && SSMuv.y >= 0. && SSMuv.y <= 1.0) {
         float d = texture(bSunMap, SSMuv).r;
@@ -122,7 +139,7 @@ void main()
         _fragColor.rgb = vec3(d);
             // _fragColor.rgb = texture(bSunMap, SSMuv).rgb;
     }
-    #endif
+*******/
 
 /******* UI *******/
     vec4 ui = texture(bUI, uvScreen);
