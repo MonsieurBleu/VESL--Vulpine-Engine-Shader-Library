@@ -115,17 +115,23 @@ void main()
 /******* DEBUG : Frustum Clusters View 
     float depth = texture(bDepth, uv).r;
     const float near = 0.1;
-    const float nbSlice = 8.0;
     const float vFar = 20.0;
     const float sSlice = 0.4;
+
+    const vec3 nbSlice = vec3(8.0, 8.0, 8.0);
 
     float k = depth;
 
     k = 0.001/k;
-    k -= mod(k, 1.0/nbSlice);
+    k -= mod(k, 1.0/nbSlice.z);
     if(k > 1.0) k = 0.0;
 
-    vec3 kColor = vec3(k);
+    float i = uvScreen.x;
+    float j = uvScreen.y;
+    i -= mod(i, 1.0/nbSlice.x);
+    j -= mod(j, 1.0/nbSlice.y);
+
+    vec3 kColor = vec3(k, i, j);
     // kColor = hsv2rgb(vec3(k, 1.0, 1.0));
     if(depth > 0.0)
     _fragColor.rgb = kColor;
