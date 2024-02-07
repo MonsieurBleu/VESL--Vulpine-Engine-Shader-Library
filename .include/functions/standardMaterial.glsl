@@ -1,7 +1,5 @@
 #include functions/HSV.glsl
-
 #include globals/Constants.glsl
-#include functions/Noise.glsl
 
 float mRoughness;
 float mRoughness2;
@@ -17,10 +15,10 @@ float nDotV;
 struct Material
 {
     vec3 result;
-    float fresnel;
 };
 
-Material getBRDF(vec3 lightDirection, vec3 lightColor)
+#ifdef USE_PBR
+Material getLighting(vec3 lightDirection, vec3 lightColor)
 {
     vec3 F0 = mix(vec3(0.04), color, mMetallic);
 
@@ -48,68 +46,42 @@ Material getBRDF(vec3 lightDirection, vec3 lightColor)
 
     return result;
 }
-
-/*
-    Efficient soft-shadow with percentage-closer filtering
-
-    link : https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-17-efficient-soft-edged-shadows-using
-*/
-#define EFFICIENT_SMOOTH_SHADOW
-float getShadow(sampler2D shadowmap, mat4 rMatrix)
-{
-    vec4 mapPosition = rMatrix * vec4(position, 1.0);
-    mapPosition.xyz /= mapPosition.w;
-    mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
-
-    if (mapPosition.x < 0. || mapPosition.x > 1. ||
-        mapPosition.y < 0. || mapPosition.y > 1.)
-        return 1.;
-
-    float res = 0.;
-    float bias = 0.00005; // 0.00002
-    float radius = 0.001; // 0.0015
-
-#ifdef EFFICIENT_SMOOTH_SHADOW
-    int it = 8;
-    int itPenumbra = 64;
-    int i = 0;
-
-    for (; i < it; i++)
-    {
-        vec2 rand = vec2(gold_noise3(position, i), gold_noise3(position, -i));
-        // vec2 rand = 0.5 - random2(position+i);
-        vec2 samplePos = mapPosition.xy + 2.0 * radius * rand;
-        float d = texture(shadowmap, samplePos).r;
-        res += d - bias < mapPosition.z ? 1.0 : 0.0;
-    }
-
-    float p = float(it) * 0.5;
-    float prct = abs(res - p) / p;
-
-    if (prct < 1.)
-    {
-        // float p = float(it)*0.5;
-        // float prct = 0.5 + 0.5*abs(res-p)/p;
-        // itPenumbra = int(float(itPenumbra)*prct);
-
-        for (; i < itPenumbra; i++)
-        {
-            vec2 rand = vec2(gold_noise3(position, i), gold_noise3(position, -i));
-            // vec2 rand = 0.5 - random2(position+i);
-            vec2 samplePos = mapPosition.xy + radius * rand;
-            float d = texture(shadowmap, samplePos).r;
-            res += d - bias < mapPosition.z ? 1.0 : 0.0;
-        }
-    }
-
-    res /= float(i);
 #else
-    res = texture(shadowmap, mapPosition.xy).r - bias < mapPosition.z ? 1.0 : 0.0;
+#ifdef USE_BLINN_PHONG
+Material getLighting(vec3 lightDirection, vec3 lightColor)
+{
+    float diffuseIntensity = 1.0;
+    float specularIntensity = 2.0 + mMetallic*5.0;
+    float fresnelIntensity = 0.5 + 2.0*mMetallic;
+
+    float nDotL = max(dot(-lightDirection, normalComposed), 0.0);
+    vec3 halfwayDir = normalize(-lightDirection+viewDir);
+
+    float diffuse = nDotL*diffuseIntensity;
+    specularIntensity *= diffuse;
+    fresnelIntensity *= diffuse;
+
+    float specularExponent = 36.0 - 32.0*pow(mRoughness, 0.5);
+    float specular = specularIntensity*pow(max(dot(normal, halfwayDir), 0.0), specularExponent);
+    
+    float fresnel = fresnelIntensity*pow((1.0 - dot(normal, viewDir)), 4.0);
+
+    Material result;
+    result.result = lightColor*(diffuse+specular+fresnel);
+    return result;
+}
+#else
+Material getLighting(vec3 lightDirection, vec3 lightColor)
+{
+    Material result;
+    result.result = lightColor;
+    return result;
+}
+#endif
 #endif
 
-    return res;
-}
 
+/*
 Material getMultiLightPBR()
 {
     int id = 0;
@@ -164,9 +136,9 @@ Material getMultiLightPBR()
 
             float radius = 5.0;
 
-            /*
-                TODO : fix radius
-            */
+            //
+            //    TODO : fix radius
+            //
             float maxDist = max(light.direction.a, 0.0001);
             float distFactor = max(maxDist - distance(sPos, position), 0.) / maxDist;
             vec3 direction = normalize(position - sPos);
@@ -187,6 +159,7 @@ Material getMultiLightPBR()
 
     return result;
 }
+*/
 
 vec3 getStandardEmmisive(vec3 fcolor)
 {

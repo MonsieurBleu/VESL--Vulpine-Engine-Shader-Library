@@ -12,7 +12,6 @@
 
 #include uniform/Base3D.glsl
 #include uniform/Model3D.glsl
-#include uniform/Ligths.glsl
 
 #ifdef ARB_BINDLESS_TEXTURE
 layout (location = 20, bindless_sampler) uniform sampler2D bColor;
@@ -25,7 +24,7 @@ layout(binding = 1) uniform sampler2D bMaterial;
 #include globals/Fragment3DInputs.glsl
 #include globals/Fragment3DOutputs.glsl
 
-#include functions/standardMaterial.glsl
+#include functions/MultiLight.glsl
 #include functions/Reflections.glsl
 #include functions/NormalMap.glsl
 
@@ -47,9 +46,9 @@ void main()
 
     normalComposed = gl_FrontFacing ? normalComposed : -normalComposed;
 
-    Material material = getMultiLightPBR();
+    Material material = getMultiLight();
     vec3 rColor = getSkyboxReflection(viewDir, normalComposed);
-    const float reflectFactor = getReflectionFactor(material.fresnel, mMetallic, mRoughness);
+    const float reflectFactor = getReflectionFactor(1.0 - nDotV, mMetallic, mRoughness);
     fragColor.rgb = color * ambientLight + material.result + rColor * reflectFactor;
 
     fragColor.rgb = mix(fragColor.rgb, color, mEmmisive);
