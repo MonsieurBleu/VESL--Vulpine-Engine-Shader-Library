@@ -1,6 +1,6 @@
 #version 460
 
-#include uniform/Base3D.glsl
+#include uniform/Base2D.glsl
 #include uniform/Model3D.glsl
 
 layout (location = 0) in vec3 _position;
