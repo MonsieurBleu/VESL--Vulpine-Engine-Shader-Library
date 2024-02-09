@@ -15,7 +15,7 @@ layout (std430, binding = 0) readonly buffer lightsBuffer
 #ifdef USE_CLUSTERED_RENDERING
     layout (std430, binding = 1) readonly buffer lightsBuffer 
     {
-        uint lightsID[];
+        int lightsID[];
     };
 #endif
 
