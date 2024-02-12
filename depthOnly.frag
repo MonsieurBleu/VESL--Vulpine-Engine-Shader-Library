@@ -8,13 +8,13 @@
 #include uniform/Model3D.glsl
 #include uniform/Ligths.glsl
 
-#ifdef ARB_BINDLESS_TEXTURE
-layout (location = 20, bindless_sampler) uniform sampler2D bColor;
-layout (location = 21, bindless_sampler) uniform sampler2D bMaterial;
-#else
-layout(binding = 0) uniform sampler2D bColor;
-layout(binding = 1) uniform sampler2D bMaterial;
-#endif
+// #ifdef ARB_BINDLESS_TEXTURE
+// layout (location = 20, bindless_sampler) uniform sampler2D bColor;
+// layout (location = 21, bindless_sampler) uniform sampler2D bMaterial;
+// #else
+// layout(binding = 0) uniform sampler2D bColor;
+// layout(binding = 1) uniform sampler2D bMaterial;
+// #endif
 
 
 #include globals/Fragment3DInputs.glsl

@@ -89,15 +89,6 @@ void getLightPoint(
     float maxDist = max(radius, 0.0001);
     float distFactor = max(maxDist - distance(position, lPosition), 0.) / maxDist;
     factor = distFactor * distFactor * intensity;
-
-    /* Optionellement 
-    
-    float maxDist = max(radius*radius, 0.0001);
-    vec3 d = position-lPosiiton;
-    factor = intensity * max(maxDist - dot(d), 0.) / maxDist;
-    
-    */
-
     lightResult = getLighting(normalize(position - lPosition), color);
 }
 
@@ -106,7 +97,62 @@ void getLightPoint(
 */
 
 #ifdef USE_CLUSTERED_RENDERING
-/* .................... */
+ivec3 getClusterId(const float ivFar, const ivec3 steps)
+{
+    vec3 id = gl_FragCoord.rgb;
+    id.rg /= vec2(_iResolution);
+    id.b = ivFar/id.b;
+
+    return ivec3(floor(id*vec3(steps)));
+}
+
+Material getMultiLight()
+{
+    Material result; result.result = vec3(.0);
+    nDotV = max(dot(normalComposed, viewDir), .0);
+
+    const ivec3 frustumClusterDim = ivec3(16, 9, 24);
+    ivec3 clusterId = getClusterId(1.f/5e3, frustumClusterDim);
+
+    if(clusterId.z > frustumClusterDim.z) return result;
+
+    int id = 
+    clusterId.x*frustumClusterDim.y*frustumClusterDim.z
+    + clusterId.y*frustumClusterDim.z
+    + clusterId.z;
+
+    id *= 1024;
+
+    int lid = 0;
+
+    for(;; id++)
+    {
+        int lid = lightsID[id];
+
+        Light l = lights[lid];
+        Material r; r.result = vec3(.0);
+        float factor = 0.f;
+
+        switch(l.infos.a)
+        {
+            case 0 : return result;
+            case 1 : 
+                getLightDirectionnal(
+                    r, factor, l.direction.xyz, l.color.rgb, l.color.a, 
+                    (l.infos.b % 2) == 0, l.infos.r, l.matrix);
+            break;
+            case 2 : 
+                getLightPoint(r, factor, l.direction.x, l.position.xyz, l.color.rgb, l.color.a);
+            break;
+            default : break;
+        }
+
+        result.result += r.result*factor;
+    }
+
+    return result;
+}
+
 #else
 Material getMultiLight()
 {
@@ -118,7 +164,7 @@ Material getMultiLight()
     {
         Light l = lights[id];
         Material r; r.result = vec3(.0);
-        float factor;
+        float factor = 0.f;
 
         switch(l.infos.a)
         {
