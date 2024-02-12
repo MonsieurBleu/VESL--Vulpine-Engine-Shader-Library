@@ -40,7 +40,7 @@ ivec3 getClusterId(const float ivFar, const ivec3 steps)
 void main()
 {
     const float vFar = 5e3;
-    const ivec3 steps = ivec3(4, 4, 6);
+    const ivec3 steps = ivec3(16, 9, 1);
 
     ivec3 cluster = getClusterId(1.0/vFar, steps);
 

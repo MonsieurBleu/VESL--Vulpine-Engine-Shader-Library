@@ -121,7 +121,7 @@ Material getMultiLight()
     + clusterId.y*frustumClusterDim.z
     + clusterId.z;
 
-    id *= 1024;
+    id *= 128;
 
     int lid = 0;
 
