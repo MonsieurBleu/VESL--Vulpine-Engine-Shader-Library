@@ -8,8 +8,8 @@
     Efficient soft-shadow with percentage-closer filtering
     link : https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-17-efficient-soft-edged-shadows-using
 */
-#define EFFICIENT_SMOOTH_SHADOW
-float getShadow(sampler2D shadowmap, mat4 rMatrix)
+// #define EFFICIENT_SMOOTH_SHADOW
+float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
 {
     vec4 mapPosition = rMatrix * vec4(position, 1.0);
     mapPosition.xyz /= mapPosition.w;
@@ -21,6 +21,7 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix)
 
     float res = 0.;
     float bias = 0.00005; // 0.00002
+    // bias /= 1.0 + nDotL;
     float radius = 0.001; // 0.0015
 
     #ifdef EFFICIENT_SMOOTH_SHADOW
@@ -75,7 +76,7 @@ void getLightDirectionnal(
     in mat4 matrix)
 {
     lightResult = getLighting(direction, color);
-    factor = shadows ? intensity : intensity*getShadow(bShadowMaps[mapID], matrix);
+    factor = shadows ? intensity : intensity*getShadow(bShadowMaps[mapID], matrix, dot(normalComposed, direction));
 }
 
 void getLightPoint(
