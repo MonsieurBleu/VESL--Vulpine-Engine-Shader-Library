@@ -17,6 +17,10 @@ layout (std430, binding = 0) readonly buffer lightsBuffer
     {
         int lightsID[];
     };
+
+    layout (location = 13) uniform float vFarLighting;
+    layout (location = 14) uniform ivec3 frustumClusterDim;
+
 #endif
 
 layout (location = 15) uniform vec3 ambientLight;

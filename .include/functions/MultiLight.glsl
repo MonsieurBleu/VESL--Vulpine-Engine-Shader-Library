@@ -8,7 +8,7 @@
     Efficient soft-shadow with percentage-closer filtering
     link : https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-17-efficient-soft-edged-shadows-using
 */
-// #define EFFICIENT_SMOOTH_SHADOW
+#define EFFICIENT_SMOOTH_SHADOW
 float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
 {
     vec4 mapPosition = rMatrix * vec4(position, 1.0);
@@ -112,8 +112,7 @@ Material getMultiLight()
     Material result; result.result = vec3(.0);
     nDotV = max(dot(normalComposed, viewDir), .0);
 
-    const ivec3 frustumClusterDim = ivec3(16, 9, 24);
-    ivec3 clusterId = getClusterId(1.f/5e3, frustumClusterDim);
+    ivec3 clusterId = getClusterId(vFarLighting, frustumClusterDim);
 
     if(clusterId.z > frustumClusterDim.z) return result;
 
@@ -126,29 +125,32 @@ Material getMultiLight()
 
     int lid = 0;
 
+
+    float factor = 0.f;
+    Material r;
+    Light sun = lights[0];
+    getLightDirectionnal(
+        r, factor, sun.direction.xyz, sun.color.rgb, sun.color.a, 
+        (sun.infos.b % 2) == 0, sun.infos.r, sun.matrix);
+    result.result += r.result*factor;
+
     for(;; id++)
     {
         int lid = lightsID[id];
 
         Light l = lights[lid];
-        Material r; r.result = vec3(.0);
-        float factor = 0.f;
+        r.result = vec3(.0);
+        factor = 0.f;
 
         switch(l.infos.a)
         {
-            case 0 : return result;
-            case 1 : 
-                getLightDirectionnal(
-                    r, factor, l.direction.xyz, l.color.rgb, l.color.a, 
-                    (l.infos.b % 2) == 0, l.infos.r, l.matrix);
-            break;
+            case 0 : return result; break;
+            
             case 2 : 
                 getLightPoint(r, factor, l.direction.x, l.position.xyz, l.color.rgb, l.color.a);
             break;
             default : break;
         }
-
-        result.result += r.result*factor;
     }
 
     return result;
