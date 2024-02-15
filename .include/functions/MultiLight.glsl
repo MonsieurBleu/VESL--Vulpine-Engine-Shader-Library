@@ -112,6 +112,15 @@ Material getMultiLight()
     Material result; result.result = vec3(.0);
     nDotV = max(dot(normalComposed, viewDir), .0);
 
+    float factor = 0.f;
+    Material r;
+    Light sun = lights[0];
+    getLightDirectionnal(
+        r, factor, sun.direction.xyz, sun.color.rgb, sun.color.a, 
+        (sun.infos.b % 2) == 0, sun.infos.r, sun.matrix);
+    result.result += r.result*factor;
+
+
     ivec3 clusterId = getClusterId(vFarLighting, frustumClusterDim);
 
     if(clusterId.z > frustumClusterDim.z) return result;
@@ -125,14 +134,6 @@ Material getMultiLight()
 
     int lid = 0;
 
-
-    float factor = 0.f;
-    Material r;
-    Light sun = lights[0];
-    getLightDirectionnal(
-        r, factor, sun.direction.xyz, sun.color.rgb, sun.color.a, 
-        (sun.infos.b % 2) == 0, sun.infos.r, sun.matrix);
-    result.result += r.result*factor;
 
     for(;; id++)
     {
@@ -151,6 +152,8 @@ Material getMultiLight()
             break;
             default : break;
         }
+
+        result.result += r.result*factor;
     }
 
     return result;
