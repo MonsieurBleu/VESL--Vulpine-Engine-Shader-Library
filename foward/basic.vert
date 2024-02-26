@@ -11,6 +11,8 @@
 void main()
 {
     mat4 modelMatrix = _modelMatrix;
+    vec3 positionInModel = _positionInModel;
+    normal = _normal;
     #include code/SetVertex3DOutputs.glsl
     gl_Position = _cameraMatrix * vec4(position, 1.0);
 };

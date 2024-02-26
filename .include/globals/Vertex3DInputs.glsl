@@ -6,3 +6,13 @@ layout (location = 1) in vec3 _normal;
 #else
     layout (location = 2) in vec2 _uv;
 #endif
+
+#ifdef USE_SKINNING 
+layout (location = 5) in ivec4 _weightsID;
+layout (location = 6) in vec4 _weights;
+
+layout (std430, binding = 2) readonly buffer animationStateBuffer
+{
+    mat4 animationState[];
+};
+#endif
