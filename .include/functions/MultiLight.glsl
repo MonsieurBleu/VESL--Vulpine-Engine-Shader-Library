@@ -113,7 +113,7 @@ Material getMultiLight()
     nDotV = max(dot(normalComposed, viewDir), .0);
 
     float factor = 0.f;
-    Material r;
+    Material r = {vec3(0.0)};
     Light sun = lights[0];
     getLightDirectionnal(
         r, factor, sun.direction.xyz, sun.color.rgb, sun.color.a, 

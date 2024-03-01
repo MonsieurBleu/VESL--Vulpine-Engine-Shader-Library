@@ -1,16 +1,16 @@
 #include functions/HSV.glsl
 #include globals/Constants.glsl
 
-float mRoughness;
-float mRoughness2;
-float mMetallic;
-float mEmmisive;
+float mRoughness = 0.0;
+float mRoughness2 = 0.0;
+float mMetallic = 0.0;
+float mEmmisive = 0.0;
 
 // vec3 ambientLight = vec3(0.2);
-vec3 normalComposed;
-vec3 viewDir;
-vec3 color;
-float nDotV;
+vec3 normalComposed = vec3(0.0);
+vec3 viewDir = vec3(0.0);
+vec3 color = vec3(0.0);
+float nDotV = 0.0;
 
 struct Material
 {
