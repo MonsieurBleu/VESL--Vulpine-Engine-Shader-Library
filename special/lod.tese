@@ -1,10 +1,26 @@
 #version 460
 
-layout (quads, fractional_odd_spacing, ccw) in;
+layout (triangles, equal_spacing, ccw) in;
+
+#define USING_VERTEX_TEXTURE_UV
+
+#include uniform/Base3D.glsl
+#include uniform/Model3D.glsl
+#include globals/Vertex3DOutputs.glsl
 
 in vec2 patchUv[];
+in vec3 patchPosition[];
+in vec3 patchNormal[];
 
-#include globals/Vertex3DOutputs.glsl
+#define DONT_RETREIVE_UV;
+
+#ifdef ARB_BINDLESS_TEXTURE
+layout (location = 22, bindless_sampler) uniform sampler2D bHeight;
+layout (location = 23, bindless_sampler) uniform sampler2D bDisp;
+#else 
+layout(binding = 2) uniform sampler2D bHeight;
+layout(binding = 3) uniform sampler2D bDisp;
+#endif
 
 /*
  The vertex positional data gets sent through the built-in GLSL 
@@ -19,48 +35,56 @@ in vec2 patchUv[];
     } gl_in[gl_MaxPatchVertices];
 */
 
+vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec3 coord)
+{
+    return vec2(coord.x) * v0 + vec2(coord.y) * v1 + vec2(coord.z) * v2;
+}
+
+vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2, vec3 coord)
+{
+    return vec3(coord.x) * v0 + vec3(coord.y) * v1 + vec3(coord.z) * v2;
+} 
+
 void main()
 {
     // get patch coordinate
-    float u = gl_TessCoord.x;
-    float v = gl_TessCoord.y;
+    // float u = gl_TessCoord.x;
+    // float v = gl_TessCoord.y;
 
     // ----------------------------------------------------------------------
-    // retrieve control point texture coordinates
-    vec2 t00 = patchUv[0];
-    vec2 t01 = patchUv[1];
-    vec2 t10 = patchUv[2];
-    vec2 t11 = patchUv[3];
+    // interpolate texture coordinate across patch
+    vec3 hTessCoord = gl_TessCoord;
+    // hTessCoord = min(hTessCoord, vec3(0.1));
+    // hTessCoord -= mod(hTessCoord, vec3(0.1));
 
-    // bilinearly interpolate texture coordinate across patch
-    vec2 t0 = (t01 - t00) * u + t00;
-    vec2 t1 = (t11 - t10) * u + t10;
-    uv = (t1 - t0) * v + t0;
+    uv = interpolate2D(patchUv[0], patchUv[1], patchUv[2], hTessCoord);
+    float h = texture(bHeight, uv).r - 0.5;
+    const float bias = 0.01;
+    h += texture(bHeight, uv+vec2(bias, 0)).r - 0.5;
+    h += texture(bHeight, uv-vec2(bias, 0)).r - 0.5;
+    h += texture(bHeight, uv+vec2(0, bias)).r - 0.5;
+    h += texture(bHeight, uv-vec2(0, bias)).r - 0.5;
+    h *= 0.0; //0.2
 
-    float h = texture(bHeight, uv).r;
-
-    // ----------------------------------------------------------------------
     // retrieve control point position coordinates
-    vec3 p00 = gl_in[0].gl_Position;
-    vec3 p01 = gl_in[1].gl_Position;
-    vec3 p10 = gl_in[2].gl_Position;
-    vec3 p11 = gl_in[3].gl_Position;
+    vec3 p1 = patchPosition[0]; vec3 p2 = patchPosition[1]; vec3 p3 = patchPosition[2];
 
     // compute patch surface normal
-    vec4 uVec = p01 - p00;
-    vec4 vVec = p10 - p00;
-    normal = normalize(cross(vVec.xyz, uVec.xyz));
+    // normal = normalize(cross(p2-p1, p3-p1));
+    normal = interpolate3D(patchNormal[0], patchNormal[1], patchNormal[2], hTessCoord);
+    vec3 positionInModel = interpolate3D(p1, p2, p3, hTessCoord) + normal*h;
 
-    // bilinearly interpolate position coordinate across patch
-    vec3 p0 = (p01 - p00) * u + p00;
-    vec3 p1 = (p11 - p10) * u + p10;
-    vec3 positionInModel = (p1 - p0) * v + p0;
-
-    // displace point along normal
-    positionInModel += normal * h;
+    // ----------------------------------------------------------------------
+    const float uvDispFactor = 3.0;
+    const float dispAmpl = 0.05; //0.002
+    vec2 uvDisp = uv*uvDispFactor;
+    float hDisp = texture(bDisp, uvDisp).r;
+    positionInModel += dispAmpl * hDisp * normal;
+    uv = uvDisp;
 
     // ----------------------------------------------------------------------
     // output patch point position in clip space
+    mat4 modelMatrix = _modelMatrix;
     #include code/SetVertex3DOutputs.glsl
     gl_Position = _cameraMatrix * vec4(position, 1.0);
 }
