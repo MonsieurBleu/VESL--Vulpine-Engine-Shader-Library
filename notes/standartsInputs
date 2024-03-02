@@ -1,0 +1,54 @@
+
+
+Uniforms :
+
+Position    Type    Name                            TAGS
+    0       ivec2 
+    1       float       _iTime
+    2       mat4        _cameraMatrix
+    3       mat4        _cameraViewMatrix
+    4       mat4        _cameraProjectionMatrix
+    5       vec3        _cameraPosition
+    6       vec3        _cameraDirection
+    7       mat4        _cameraInverseViewMatrix
+    8
+    9
+    10
+    11      vec4        lodHeightDispFactors        USING_LOD_TESSELATION
+    12      vec4        lodTessLevelDistance        USING_LOD_TESSELATION
+    13      float       vFarLighting                USE_CLUSTERED_RENDERING
+    14      ivec3       frustumClusterDim           USE_CLUSTERED_RENDERING
+    15      vec3        ambientLight
+    16      mat4        _modelMatrix        
+    17      
+    18
+    19
+    20      vec3        bColor                      used in basic.frag
+  20-...    sampler2D   bColor/bMaterial...         same as models textures, but bindless
+    ... 
+   24/32    -           safe user defined uniforms  
+
+
+VAO :
+Position    Type    Nme                 TAGS
+    0       vec3    _positionInModel
+    1       vec3    _normal
+    2       vec3    _color              !USING_VERTEX_TEXTURE_UV
+    2       vec2    _uv                 USING_VERTEX_TEXTURE_UV
+   3-4      mat4    _instanceMatrix     USING_INSTANCING
+    5       ivec4   _weightsID          USE_SKINNING
+    6       vec4    _weights            USE_SKINNING
+
+SSBO : 
+Position    Name            TAG
+    0       lightsBuffer              
+    1       lightsClustersBuffer    USE_CLUSTERED_RENDERING
+    2       animationStateBuffer    USE_SKINNING
+
+TEXTURES :
+Position    Name            TAG
+    1       bColor          
+    2       bMaterial
+    3       bHeight         USING_LOD_TESSELATION
+    3       bDisp           USING_LOD_TESSELATION
+  16-32     bShadowMaps[]

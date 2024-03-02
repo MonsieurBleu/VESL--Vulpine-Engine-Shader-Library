@@ -2,6 +2,7 @@
 #version 460
 
 #define USING_VERTEX_TEXTURE_UV
+#define USING_LOD_TESSELATION
 
 #include uniform/Base3D.glsl
 #include uniform/Model3D.glsl
@@ -20,31 +21,6 @@ out vec2 patchUv[];
 out vec3 patchPosition[];
 out vec3 patchNormal[];
 
-// int handleTessStep(float x)
-// {
-//     if(x > 200.0)
-//         return 1;
-//     else if(x > 50)
-//         return 
-// }
-
-int getTessLevel(float d)
-{
-    if(d > 100)
-        return 1;
-    
-    if(d > 50)
-        return 2;
-    
-    if(d > 20)
-        return 3;
-    
-    if(d > 1)
-        return 4;
-
-    return 5;
-}
-
 void main()
 {
     // ----------------------------------------------------------------------
@@ -59,15 +35,10 @@ void main()
     if (gl_InvocationID == 0)
     {
         // const int level = 128;
-        const int MIN_TESS_LEVEL = 1;
-        const int MAX_TESS_LEVEL = 5;
-        const float MIN_DISTANCE = 0.1;
-        const float MAX_DISTANCE = 50;
-
-        // vec4 eyeSpacePos00 = _cameraViewMatrix * _modelMatrix * vec4(patchPosition[0], 1.0);
-        // vec4 eyeSpacePos01 = _cameraViewMatrix * _modelMatrix * vec4(patchPosition[1], 1.0);
-        // vec4 eyeSpacePos10 = _cameraViewMatrix * _modelMatrix * vec4(patchPosition[2], 1.0);
-        // vec3 depths = abs(vec3(eyeSpacePos00.z, eyeSpacePos01.z, eyeSpacePos10.z));
+        const int MIN_TESS_LEVEL = int(lodTessLevelDistance.x);
+        const int MAX_TESS_LEVEL = int(lodTessLevelDistance.y);
+        const float MIN_DISTANCE = lodTessLevelDistance.z;
+        const float MAX_DISTANCE = lodTessLevelDistance.w;
 
         float worldDist00 = distance(vec3(_modelMatrix * vec4(patchPosition[0], 1.0)), _cameraPosition);
         float worldDist01 = distance(vec3(_modelMatrix * vec4(patchPosition[1], 1.0)), _cameraPosition);
@@ -80,7 +51,8 @@ void main()
             clamp((depths.z-MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0)
         );
 
-        distances = pow(distances, vec3(0.5));
+        // distances = pow(distances, vec3(0.5));
+        distances = smoothstep(0.0, 1.0, distances);
 
         float tessLevel0 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[1], distances[2]) );
         float tessLevel1 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[2], distances[0]) );

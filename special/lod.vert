@@ -1,6 +1,7 @@
 #version 460
 
 #define USING_VERTEX_TEXTURE_UV
+#define USING_LOD_TESSELATION
 
 #include uniform/Base3D.glsl
 #include uniform/Model3D.glsl

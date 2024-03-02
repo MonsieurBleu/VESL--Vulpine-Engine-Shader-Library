@@ -7,6 +7,10 @@ layout (location = 1) in vec3 _normal;
     layout (location = 2) in vec2 _uv;
 #endif
 
+#ifdef USING_INSTANCING
+    layout (location = 3) in mat4 _instanceMatrix;
+#endif
+
 #ifdef USE_SKINNING 
 layout (location = 5) in ivec4 _weightsID;
 layout (location = 6) in vec4 _weights;
