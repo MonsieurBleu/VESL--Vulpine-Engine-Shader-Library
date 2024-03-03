@@ -36,7 +36,11 @@ void main()
     if(NRM.x <= 0.01 && NRM.y <= 0.01)
         discard;
 
+#ifndef USING_LOD_TESSELATION
     mEmmisive = 1.0 - CE.a;
+#else
+    mEmmisive = 0.0;
+#endif
     mMetallic = 1.0 - NRM.a;
     mRoughness = NRM.b;
     mRoughness2 = mRoughness * mRoughness;

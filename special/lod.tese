@@ -16,9 +16,13 @@ in vec3 patchNormal[];
 #define DONT_RETREIVE_UV;
 
 #ifdef ARB_BINDLESS_TEXTURE
+layout (location = 20, bindless_sampler) uniform sampler2D bColor;
+layout (location = 21, bindless_sampler) uniform sampler2D bMaterial;
 layout (location = 22, bindless_sampler) uniform sampler2D bHeight;
 layout (location = 23, bindless_sampler) uniform sampler2D bDisp;
-#else 
+#else
+layout(binding = 0) uniform sampler2D b_Color;
+layout(binding = 1) uniform sampler2D bMaterial;
 layout(binding = 2) uniform sampler2D bHeight;
 layout(binding = 3) uniform sampler2D bDisp;
 #endif
@@ -60,23 +64,25 @@ void main()
 
     if(lodHeightDispFactors.w > zero)
     {
-        float h = texture(bHeight, uv*lodHeightDispFactors.z).r - 0.5;
-        const float bias = 0.01*lodHeightDispFactors.z;
-        h += texture(bHeight, uv+vec2(bias, 0)).r - 0.5;
-        h += texture(bHeight, uv-vec2(bias, 0)).r - 0.5;
-        h += texture(bHeight, uv+vec2(0, bias)).r - 0.5;
-        h += texture(bHeight, uv-vec2(0, bias)).r - 0.5;
-        h *= 0.2 * lodHeightDispFactors.w/lodHeightDispFactors.z;
+        float h = texture(bHeight, clamp(uv*lodHeightDispFactors.z, 0.001, 0.999)).r;
+        const float bias = 0.005*lodHeightDispFactors.z;
+        h += texture(bHeight, clamp(uv+vec2(bias, 0), 0.001, 0.999)).r - 0.5;
+        h += texture(bHeight, clamp(uv-vec2(bias, 0), 0.001, 0.999)).r - 0.5;
+        h += texture(bHeight, clamp(uv+vec2(0, bias), 0.001, 0.999)).r - 0.5;
+        h += texture(bHeight, clamp(uv-vec2(0, bias), 0.001, 0.999)).r - 0.5;
+        h *= 0.2 * lodHeightDispFactors.w;
         positionInModel += normal*h;
     }
 
     if(lodHeightDispFactors.y > zero)
     {
         vec3 normalDisp = normalize(cross(p2-p1, p3-p1));
+        normalDisp = normal;
 
-        const float dispAmpl = lodHeightDispFactors.y/lodHeightDispFactors.x; 
+        const float dispAmpl = lodHeightDispFactors.y; 
         vec2 uvDisp = uv*lodHeightDispFactors.x;
-        float hDisp = texture(bDisp, uvDisp).r - 0.5;
+        // float hDisp = texture(bDisp, uvDisp).r;
+        float hDisp = texture(b_Color, uvDisp).a - 0.5;
         positionInModel += dispAmpl * hDisp * normalDisp;
         uv = uvDisp;
     }
