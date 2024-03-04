@@ -28,47 +28,33 @@ layout(binding = 1) uniform sampler2D bMaterial;
 #include functions/Reflections.glsl
 #include functions/NormalMap.glsl
 
-// #define USING_LOD_TESSELATION
-// layout(binding = 2) uniform sampler2D bHeight;
+// #define USING_TERRAIN_RENDERING
+#ifdef USING_TERRAIN_RENDERING
+#include functions/TerrainTexture.glsl
+in vec2 terrainUv;
+in float terrainHeight;
+#endif
 
 void main()
 {
+#ifdef USING_TERRAIN_RENDERING
+    vec4 facttext = texture(bTerrainMap, terrainUv);
+    
+    vec4 factors = getTerrainFactorFromState(normal, terrainHeight);
+
+    vec4 CE = getTerrainTexture(factors, uv, bTerrainCE);
+    vec4 NRM = getTerrainTexture(factors, uv, bTerrainNRM);
+#else
     vec4 CE = texture(bColor, uv);
     vec4 NRM = texture(bMaterial, uv);
+#endif
 
     if(NRM.x <= 0.01 && NRM.y <= 0.01)
         discard;
 
-#ifndef USING_LOD_TESSELATION
-    mEmmisive = 1.0 - CE.a;
-    normalComposed = normal;
-#else
+    // mEmmisive = 1.0 - CE.a;
     mEmmisive = 0.0;
-
-
     normalComposed = normal;
-    // float nbias = 0.01;
-    // float dist = nbias;
-
-    // float nh1 = texture(bHeight, clamp(uv, 0.001, 0.999)).r;
-    // vec3 nP1 = normal*nh1; 
-    
-    // float nh2 = texture(bHeight, clamp(uv+vec2(0, nbias), 0.001, 0.999)).r - 0.5;
-    // float nh3 = texture(bHeight, clamp(uv+vec2(nbias, 0), 0.001, 0.999)).r - 0.5;
-    // vec3 nP2 = normal*nh2 + vec3(0.0, 0.0, dist); 
-    // vec3 nP3 = normal*nh3 + vec3(dist, 0.0, 0.0); 
-
-    // float nh4 = texture(bHeight, clamp(uv-vec2(0, nbias), 0.001, 0.999)).r - 0.5;
-    // float nh5 = texture(bHeight, clamp(uv-vec2(nbias, 0), 0.001, 0.999)).r - 0.5; 
-    // vec3 nP4 = normal*nh4 - vec3(0.0, 0.0, dist); 
-    // vec3 nP5 = normal*nh5 - vec3(dist, 0.0, 0.0); 
-
-    // vec3 n1 = normalize(cross(nP2-nP1, nP3-nP1));
-    // vec3 n2 = normalize(cross(nP4-nP1, nP5-nP1));
-
-    // normalComposed = normalize(n2+n1);
-
-#endif
     mMetallic = 1.0 - NRM.a;
     mRoughness = NRM.b;
     mRoughness2 = mRoughness * mRoughness;
@@ -89,6 +75,6 @@ void main()
     // fragNormal = normalize((vec4(normalComposed, 0.0) * _cameraInverseViewMatrix).rgb)*0.5 + 0.5;
     fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb) * 0.5 + 0.5;
 
-    // fragColor.rgb = normal;
+    // fragColor.rgb = -normalComposed*0.5 + 0.5;
     // fragColor.rgb = vec3(1);
 }

@@ -51,7 +51,8 @@ void main()
             clamp((depths.z-MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0)
         );
 
-        distances = pow(distances, vec3(3.0));
+        distances = pow(distances, vec3(0.25));
+        distances -= mod(distances, vec3(0.25));
         // distances = smoothstep(0.0, 1.0, distances);
 
         float tessLevel0 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[1], distances[2]) );
