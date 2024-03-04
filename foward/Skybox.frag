@@ -31,7 +31,8 @@ float exposure = 1.0;
 
 void main()
 {
-    color = getSkyColor(uv);
+    // color = getSkyColor(uv);
+    color = texture(bTexture, uv).rgb;
 
     // color = pow(vec3(1.0) - exp(-color*exposure), vec3(1.0/gamma));
 

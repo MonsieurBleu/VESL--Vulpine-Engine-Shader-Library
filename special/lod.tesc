@@ -40,9 +40,9 @@ void main()
         const float MIN_DISTANCE = lodTessLevelDistance.z;
         const float MAX_DISTANCE = lodTessLevelDistance.w;
 
-        float worldDist00 = distance(vec3(_modelMatrix * vec4(patchPosition[0], 1.0)), _cameraPosition);
-        float worldDist01 = distance(vec3(_modelMatrix * vec4(patchPosition[1], 1.0)), _cameraPosition);
-        float worldDist10 = distance(vec3(_modelMatrix * vec4(patchPosition[2], 1.0)), _cameraPosition);
+        float worldDist00 = distance(vec3(_modelMatrix * vec4(patchPosition[0], 1.0)).xz, _cameraPosition.xz);
+        float worldDist01 = distance(vec3(_modelMatrix * vec4(patchPosition[1], 1.0)).xz, _cameraPosition.xz);
+        float worldDist10 = distance(vec3(_modelMatrix * vec4(patchPosition[2], 1.0)).xz, _cameraPosition.xz);
         vec3 depths = abs(vec3(worldDist00, worldDist01, worldDist10));
 
         vec3 distances = vec3(
@@ -51,7 +51,7 @@ void main()
             clamp((depths.z-MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0)
         );
 
-        distances = pow(distances, vec3(5.0));
+        distances = pow(distances, vec3(3.0));
         // distances = smoothstep(0.0, 1.0, distances);
 
         float tessLevel0 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[1], distances[2]) );

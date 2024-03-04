@@ -167,7 +167,7 @@ vec3 getStandardEmmisive(vec3 fcolor)
     // vec3 finalEmmisive = mix(baseEmmissive, 2.0*fcolor, mEmmisive);
 
     // vec3 baseEmmissive = fcolor*pow(rgb2v(fcolor), 2.0);
-    vec3 baseEmmissive = pow(fcolor, vec3(3.5));
+    vec3 baseEmmissive = pow(fcolor, vec3(1.5));
     vec3 finalEmmisive = baseEmmissive * (1.0 + 2.0 * mEmmisive);
 
     return finalEmmisive;

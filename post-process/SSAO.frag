@@ -39,7 +39,7 @@ vec2 noiseScale = vec2(float(iResolution.x)/4.0, float(iResolution.y)/4.0);
 
 int kernelSize = 16; // 64
 float radius = 20.0; // 5.0
-float bias = 0.1; // 0.5
+float bias = 0.5; // 0.5
 
 void main()
 {

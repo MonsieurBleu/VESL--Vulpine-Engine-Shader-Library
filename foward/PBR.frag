@@ -28,6 +28,9 @@ layout(binding = 1) uniform sampler2D bMaterial;
 #include functions/Reflections.glsl
 #include functions/NormalMap.glsl
 
+// #define USING_LOD_TESSELATION
+// layout(binding = 2) uniform sampler2D bHeight;
+
 void main()
 {
     vec4 CE = texture(bColor, uv);
@@ -38,14 +41,39 @@ void main()
 
 #ifndef USING_LOD_TESSELATION
     mEmmisive = 1.0 - CE.a;
+    normalComposed = normal;
 #else
     mEmmisive = 0.0;
+
+
+    normalComposed = normal;
+    // float nbias = 0.01;
+    // float dist = nbias;
+
+    // float nh1 = texture(bHeight, clamp(uv, 0.001, 0.999)).r;
+    // vec3 nP1 = normal*nh1; 
+    
+    // float nh2 = texture(bHeight, clamp(uv+vec2(0, nbias), 0.001, 0.999)).r - 0.5;
+    // float nh3 = texture(bHeight, clamp(uv+vec2(nbias, 0), 0.001, 0.999)).r - 0.5;
+    // vec3 nP2 = normal*nh2 + vec3(0.0, 0.0, dist); 
+    // vec3 nP3 = normal*nh3 + vec3(dist, 0.0, 0.0); 
+
+    // float nh4 = texture(bHeight, clamp(uv-vec2(0, nbias), 0.001, 0.999)).r - 0.5;
+    // float nh5 = texture(bHeight, clamp(uv-vec2(nbias, 0), 0.001, 0.999)).r - 0.5; 
+    // vec3 nP4 = normal*nh4 - vec3(0.0, 0.0, dist); 
+    // vec3 nP5 = normal*nh5 - vec3(dist, 0.0, 0.0); 
+
+    // vec3 n1 = normalize(cross(nP2-nP1, nP3-nP1));
+    // vec3 n2 = normalize(cross(nP4-nP1, nP5-nP1));
+
+    // normalComposed = normalize(n2+n1);
+
 #endif
     mMetallic = 1.0 - NRM.a;
     mRoughness = NRM.b;
     mRoughness2 = mRoughness * mRoughness;
     color = CE.rgb;
-    normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
+    normalComposed = perturbNormal(normalComposed, viewVector, NRM.xy, uv);
     viewDir = normalize(_cameraPosition - position);
 
     normalComposed = gl_FrontFacing ? normalComposed : -normalComposed;
@@ -62,4 +90,5 @@ void main()
     fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb) * 0.5 + 0.5;
 
     // fragColor.rgb = normal;
+    // fragColor.rgb = vec3(1);
 }
