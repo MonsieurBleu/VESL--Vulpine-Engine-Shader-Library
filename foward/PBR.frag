@@ -73,7 +73,4 @@ void main()
 
     // fragNormal = normalize((vec4(normalComposed, 0.0) * _cameraInverseViewMatrix).rgb)*0.5 + 0.5;
     fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb) * 0.5 + 0.5;
-
-    // fragColor.rgb = -normalComposed*0.5 + 0.5;
-    // fragColor.rgb = vec3(1);
 }
