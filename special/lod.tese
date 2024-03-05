@@ -1,6 +1,7 @@
 #version 460
 
 layout (triangles, equal_spacing, ccw) in;
+// layout (triangles, fractional_even_spacing, ccw) in;
 
 #define USING_VERTEX_TEXTURE_UV
 #define USING_LOD_TESSELATION
@@ -25,7 +26,6 @@ layout(binding = 1) uniform sampler2D bMaterial;
 layout(binding = 2) uniform sampler2D bHeight;
 #endif
 
-#define USING_TERRAIN_RENDERING
 #ifdef USING_TERRAIN_RENDERING
 #include functions/TerrainTexture.glsl
 out vec2 terrainUv;
@@ -100,13 +100,13 @@ void main()
 
     if(lodHeightDispFactors.y > zero)
     {
-        vec3 normalDisp = normalG;
+        vec3 normalDisp = normal;
         const float dispAmpl = lodHeightDispFactors.y; 
         vec2 uvDisp = uv*lodHeightDispFactors.x;
 
         vec4 factors = getTerrainFactorFromState(normal, terrainHeight);
 
-        float hDisp = 1.0 - getTerrainTexture(factors, uv, bTerrainCE).a;
+        float hDisp = 0.5 - getTerrainTexture(factors, uv, bTerrainCE).a;
         
         positionInModel += dispAmpl * hDisp * normalDisp;
         uv = uvDisp;

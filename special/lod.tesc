@@ -1,4 +1,3 @@
-// tessellation control shader
 #version 460
 
 #define USING_VERTEX_TEXTURE_UV
@@ -51,21 +50,40 @@ void main()
             clamp((depths.z-MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0)
         );
 
-        distances = pow(distances, vec3(0.25));
-        distances -= mod(distances, vec3(0.25));
+
+        // distances = pow(distances, vec3(0.25));
+        // distances -= mod(distances, vec3(0.25));
         // distances = smoothstep(0.0, 1.0, distances);
 
-        float tessLevel0 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[1], distances[2]) );
-        float tessLevel1 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[2], distances[0]) );
-        float tessLevel2 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[0], distances[1]) );
+        vec3 tessDist = vec3( min(distances[1], distances[2]), min(distances[2], distances[0]), min(distances[0], distances[1]));
+        ivec3 tessLevel;
+
+        for(int i = 0; i < 3; i++)
+        {
+            if(tessDist[i] > 0.999)
+                tessLevel[i] = MIN_TESS_LEVEL;
+            else
+            if(tessDist[i] > 0.5)
+                tessLevel[i] = MAX_TESS_LEVEL/4;
+            else
+            if(tessDist[i] > 0.1)
+                tessLevel[i] = MAX_TESS_LEVEL/2 - 1;
+            else
+                tessLevel[i] = MAX_TESS_LEVEL;
+        }
+
+
+        // float tessLevel0 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[1], distances[2]) );
+        // float tessLevel1 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[2], distances[0]) );
+        // float tessLevel2 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distances[0], distances[1]) );
 
         // float tessLevel0 = getTessLevel(depths.x);
         // float tessLevel1 = getTessLevel(depths.y);
         // float tessLevel2 = getTessLevel(depths.z);
 
-        gl_TessLevelOuter[0] = tessLevel0;
-        gl_TessLevelOuter[1] = tessLevel1;
-        gl_TessLevelOuter[2] = tessLevel2;
+        gl_TessLevelOuter[0] = tessLevel.x;
+        gl_TessLevelOuter[1] = tessLevel.y;
+        gl_TessLevelOuter[2] = tessLevel.z;
         // gl_TessLevelOuter[3] = 16;
 
         // gl_TessLevelInner[0] = 16;

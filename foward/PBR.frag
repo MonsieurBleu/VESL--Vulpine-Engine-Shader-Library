@@ -28,7 +28,6 @@ layout(binding = 1) uniform sampler2D bMaterial;
 #include functions/Reflections.glsl
 #include functions/NormalMap.glsl
 
-// #define USING_TERRAIN_RENDERING
 #ifdef USING_TERRAIN_RENDERING
 #include functions/TerrainTexture.glsl
 in vec2 terrainUv;

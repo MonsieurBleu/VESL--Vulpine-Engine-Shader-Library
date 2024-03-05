@@ -6,11 +6,6 @@ vec4 getTerrainTexture(vec4 factors, vec2 uv, sampler2D textures[4])
 {
     vec4 res = vec4(0.0);
 
-    // for(int i = 3; i >= 0; i--)
-    // // for(int i = 0; i < 4; i++)
-    //     if(factors[i] > 0.0)
-    //         res = mix(res, texture(textures[i], uv), factors[i]);
-
     res = mix(res, texture(textures[2], uv), factors[2]);
 
     res = mix(res, texture(textures[3], uv), factors[3]);
