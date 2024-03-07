@@ -1,6 +1,7 @@
 #version 460
 
 layout (triangles, equal_spacing, ccw) in;
+// layout (triangles, fractional_even_spacing, ccw) in;
 
 #define USING_VERTEX_TEXTURE_UV
 #define USING_LOD_TESSELATION
@@ -25,7 +26,6 @@ layout(binding = 1) uniform sampler2D bMaterial;
 layout(binding = 2) uniform sampler2D bHeight;
 #endif
 
-#define USING_TERRAIN_RENDERING
 #ifdef USING_TERRAIN_RENDERING
 #include functions/TerrainTexture.glsl
 out vec2 terrainUv;
@@ -56,29 +56,20 @@ void main()
 
     if(lodHeightDispFactors.w > zero)
     {
-        float h = texture(bHeight, clamp(uv*lodHeightDispFactors.z, 0.001, 0.999)).r;
+        vec2 hUv = uv*lodHeightDispFactors.z;
+        float h = texture(bHeight, clamp(hUv, 0.001, 0.999)).r;
         const float bias = 0.01*lodHeightDispFactors.z;
-        float h1 = texture(bHeight, clamp(uv+vec2(bias, 0), 0.001, 0.999)).r;
-        float h2 = texture(bHeight, clamp(uv-vec2(bias, 0), 0.001, 0.999)).r;
-        float h3 = texture(bHeight, clamp(uv+vec2(0, bias), 0.001, 0.999)).r;
-        float h4 = texture(bHeight, clamp(uv-vec2(0, bias), 0.001, 0.999)).r;
+        float h1 = texture(bHeight, clamp(hUv+vec2(bias, 0), 0.001, 0.999)).r;
+        float h2 = texture(bHeight, clamp(hUv-vec2(bias, 0), 0.001, 0.999)).r;
+        float h3 = texture(bHeight, clamp(hUv+vec2(0, bias), 0.001, 0.999)).r;
+        float h4 = texture(bHeight, clamp(hUv-vec2(0, bias), 0.001, 0.999)).r;
 
-        float tessLevel = gl_TessLevelOuter[0];
-        // float nbias = 0.01 / pow(tessLevel, 0.25);
-        float nbias = 0.01;
-        float dist = nbias/lodHeightDispFactors.w;
-
-        float nh1 = h;
-        vec3 nP1 = normal*nh1; 
-        float nh2 = texture(bHeight, clamp(uv+vec2(0, nbias), 0.001, 0.999)).r;
-        float nh3 = texture(bHeight, clamp(uv+vec2(nbias, 0), 0.001, 0.999)).r;
-        vec3 nP2 = normal*nh2 + vec3(0.0, 0.0, dist); 
-        vec3 nP3 = normal*nh3 + vec3(dist, 0.0, 0.0); 
-
-        float nh4 = texture(bHeight, clamp(uv-vec2(0, nbias), 0.001, 0.999)).r;
-        float nh5 = texture(bHeight, clamp(uv-vec2(nbias, 0), 0.001, 0.999)).r; 
-        vec3 nP4 = normal*nh4 - vec3(0.0, 0.0, dist); 
-        vec3 nP5 = normal*nh5 - vec3(dist, 0.0, 0.0); 
+        float dist = bias/lodHeightDispFactors.w;
+        vec3 nP1 = normal*h; 
+        vec3 nP2 = normal*h3 + vec3(0.0, 0.0, dist); 
+        vec3 nP3 = normal*h1 + vec3(dist, 0.0, 0.0); 
+        vec3 nP4 = normal*h4 - vec3(0.0, 0.0, dist); 
+        vec3 nP5 = normal*h2 - vec3(dist, 0.0, 0.0); 
 
         vec3 n1 = normalize(cross(nP2-nP1, nP3-nP1));
         vec3 n2 = normalize(cross(nP4-nP1, nP5-nP1));
@@ -89,24 +80,23 @@ void main()
 
     #ifdef USING_TERRAIN_RENDERING
         terrainHeight = h;
-        terrainUv = uv*lodHeightDispFactors.z;
+        terrainUv = hUv;
     #endif
-        const float hfact = 1.0;
+        const float hfact = 2.0;
         h = (hfact*h+h1+h2+h3+h4)/(hfact+4.0);
         positionInModel += normalG*(h-0.5)*lodHeightDispFactors.w;
-
     }
 
 
     if(lodHeightDispFactors.y > zero)
     {
-        vec3 normalDisp = normalG;
+        vec3 normalDisp = normal;
         const float dispAmpl = lodHeightDispFactors.y; 
         vec2 uvDisp = uv*lodHeightDispFactors.x;
 
         vec4 factors = getTerrainFactorFromState(normal, terrainHeight);
 
-        float hDisp = 1.0 - getTerrainTexture(factors, uv, bTerrainCE).a;
+        float hDisp = 0.5 - getTerrainTexture(factors, uv, bTerrainCE).a;
         
         positionInModel += dispAmpl * hDisp * normalDisp;
         uv = uvDisp;
