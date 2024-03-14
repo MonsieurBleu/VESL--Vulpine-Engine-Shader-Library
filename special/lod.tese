@@ -96,7 +96,7 @@ void main()
 
         vec4 factors = getTerrainFactorFromState(normal, terrainHeight);
 
-        float hDisp = 0.5 - getTerrainTexture(factors, uv, bTerrainCE).a;
+        float hDisp = 0.5 - getTerrainTexture(factors, uvDisp, bTerrainCE).a;
         
         positionInModel += dispAmpl * hDisp * normalDisp;
         uv = uvDisp;
