@@ -56,6 +56,7 @@ void main()
     normalComposed = normal;
     mMetallic = 1.0 - NRM.a;
     mRoughness = NRM.b;
+
     mRoughness2 = mRoughness * mRoughness;
     color = CE.rgb;
     normalComposed = perturbNormal(normalComposed, viewVector, NRM.xy, uv);

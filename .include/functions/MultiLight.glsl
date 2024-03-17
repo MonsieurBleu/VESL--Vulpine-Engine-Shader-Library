@@ -123,7 +123,12 @@ Material getMultiLight()
 
     ivec3 clusterId = getClusterId(vFarLighting, frustumClusterDim);
 
-    if(clusterId.z > frustumClusterDim.z) return result;
+    if(clusterId.z >= frustumClusterDim.z) return result;
+    if(clusterId.x >= frustumClusterDim.x) return result;
+    if(clusterId.y >= frustumClusterDim.y) return result;
+    if(clusterId.z < 0) return result;
+    if(clusterId.x < 0) return result;
+    if(clusterId.y < 0) return result;
 
     int id = 
     clusterId.x*frustumClusterDim.y*frustumClusterDim.z
