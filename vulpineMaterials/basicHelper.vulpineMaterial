@@ -1,0 +1,6 @@
+basicHelper
+:   basicHelper
+    :   shader/foward/basic.frag
+    :   shader/foward/basic.vert
+    ;
+;

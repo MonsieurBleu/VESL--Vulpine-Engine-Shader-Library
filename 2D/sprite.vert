@@ -24,5 +24,6 @@ void main() {
     atlasUV = vec2(atlasUV.x, 1. - atlasUV.y);
     position = (_modelMatrix * vec4(_position, 1.0)).rgb;
     position.xy *= vec2(_iResolution.yx) / float(_iResolution.y);
+
     gl_Position = vec4(position, 1.0);
 };
