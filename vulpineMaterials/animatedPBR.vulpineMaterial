@@ -1,0 +1,10 @@
+animatedPBR
+:   animatedPBRgeometry
+    :   shader/foward/PBR.frag
+    :   shader/animation/animated.vert
+    ;
+:   animatedPBRDepthOnly
+    :   shader/depthOnly.frag
+    :   shader/animation/animated.vert
+    ;
+;
