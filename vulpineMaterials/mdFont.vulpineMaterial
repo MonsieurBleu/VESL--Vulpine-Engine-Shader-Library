@@ -1,0 +1,12 @@
+mdFont
+:   mdFont
+    :   uniforms 2D
+    :   shader/2D/font.frag
+    :   shader/2D/sprite.vert
+    ;
+:   mdFontdepthOnly
+    :   uniforms 2D
+    :   shader/2D/font.frag
+    :   shader/2D/sprite.vert
+    ;
+;

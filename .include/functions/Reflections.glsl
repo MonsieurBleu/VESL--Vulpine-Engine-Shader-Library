@@ -6,8 +6,8 @@
 float getReflectionFactor(float fresnel, float metallic, float roughness)
 {
     const float maxReflectivity = 0.6;
-    const float metallicExponent = 3.0*(1.0 - metallic);
-    const float roughnessFactor = 1.0-roughness;
+    const float metallicExponent = 1.75*(1.0 - metallic*0.5);
+    const float roughnessFactor = (1.0-roughness);
     const float reflectFactor = roughnessFactor*min(maxReflectivity, pow(fresnel, metallicExponent));
     return reflectFactor;
 }

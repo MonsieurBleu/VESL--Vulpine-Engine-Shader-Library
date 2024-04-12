@@ -55,6 +55,7 @@ void main()
     mEmmisive = 0.0;
     normalComposed = normal;
     mMetallic = 1.0 - NRM.a;
+
     mRoughness = NRM.b;
 
     mRoughness2 = mRoughness * mRoughness;

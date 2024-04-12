@@ -3,8 +3,6 @@
 #include uniform/Base3D.glsl
 #include uniform/Model3D.glsl
 
-
-
 layout (location = 0) out vec4 fragColor;
 layout (binding = 0) uniform sampler2D bAtlas;
 
@@ -27,7 +25,7 @@ void main()
 
     float opacity = getFontAlpha(bAtlas, atlasUV);
 
-    fragColor = vec4(bodyColor, opacity*2.0);
+    fragColor = vec4(bodyColor, opacity);
     
     if(opacity < 1e-2) discard;
 }
