@@ -19,9 +19,9 @@ void main()
 {
     vec3 bodyColor = _textColor;
 
-    bodyColor = bold > 0 ? bodyColor*0.75 : bodyColor;
+    bodyColor = bold > 0 ? bodyColor*vec3(0.75, 1.2, 2.0) : bodyColor;
 
-    vec3 outlineColor = bodyColor*0.3;
+    vec3 outlineColor = italic > 0 ? bodyColor*0.2 : bodyColor*0.4;
 
     vec4 texel = texture(bAtlas, atlasUV);
     float dist = median(texel.r, texel.g, texel.b);

@@ -22,8 +22,20 @@ void main() {
 
     atlasUV = _atlasUV / 2048.0;
     atlasUV = vec2(atlasUV.x, 1. - atlasUV.y);
-    position = (_modelMatrix * vec4(_position, 1.0)).rgb;
+
+    position = _position;
+
+    if(italic == 1u && (
+        gl_VertexID%6 == 0 ||
+        gl_VertexID%6 == 1 ||
+        // gl_VertexID%6 == 4 ||
+        gl_VertexID%6 == 5
+    ))
+        position.x += 0.005;
+
+    position = (_modelMatrix * vec4(position, 1.0)).rgb;
     position.xy *= vec2(_iResolution.yx) / float(_iResolution.y);
+
 
     gl_Position = vec4(position, 1.0);
 };

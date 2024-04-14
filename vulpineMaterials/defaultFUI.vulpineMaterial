@@ -1,0 +1,7 @@
+defaultFUI
+:   defaultFUI
+    :   uniforms 2D
+    :   shader/2D/fastui.frag
+    :   shader/2D/fastui.vert
+    ;
+;
