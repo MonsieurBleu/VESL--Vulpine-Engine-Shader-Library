@@ -21,16 +21,25 @@ layout (binding = 2) uniform sampler2D bNormal;
 
 in vec2 uvScreen;
 
-out float _AO;
+out vec4 _AO;
 
 
 vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
 {
-    vec4 clipSpacePos = vec4(18.f*(textureCoordinate * 1.0 - 0.5), depth, 1.0);
-    vec4 position = clipSpacePos * inverse(_cameraProjectionMatrix);
-    position.z = 1.0 - position.z;
-    position.xyz /= -position.w;
+    // vec4 clipSpacePos = vec4(18.f*(textureCoordinate * 1.0 - 0.5), depth, 1.0);
+    // vec4 position = clipSpacePos * inverse(_cameraProjectionMatrix);
+    // position.z = 1.0 - position.z;
+    // position.xyz /= -position.w;
+    // position.z = -abs(position.z);
+    // return position.xyz;
+
+    vec4 clipSpacePos = vec4(2.0*textureCoordinate - 1.0, depth, 1.0);
+    vec4 position = inverse(_cameraProjectionMatrix) * clipSpacePos;
+    // position.z = 1.0 - position.z;
+
+    position.xyz /= position.w;
     position.z = -abs(position.z);
+
     return position.xyz;
 }
 
@@ -38,8 +47,8 @@ vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
 vec2 noiseScale = vec2(float(iResolution.x)/4.0, float(iResolution.y)/4.0);
 
 int kernelSize = 16; // 64
-float radius = 20.0; // 5.0
-float bias = 0.5; // 0.5
+float radius = 0.5; // 5.0
+float bias = 0.0; // 0.5
 
 void main()
 {
@@ -61,6 +70,7 @@ void main()
 
     // iterate over the sample kernel and calculate occlusion factor
     float occlusion = 1.f;
+    vec3 color = vec3(0.f);
     for(int i = 0; i < kernelSize; ++i)
     {
         // get sample position
@@ -77,8 +87,21 @@ void main()
         float sampleDepth = calculateViewPosition(offset.xy, texture(bDepth, offset.xy).x).z;
         float rangeCheck = smoothstep(radius, 0.0, abs(fragPos.z - sampleDepth));
 
-        occlusion += (-sampleDepth <= -samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;
+        // occlusion += (-sampleDepth <= -samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;
+
+        if(-sampleDepth <= -samplePos.z - bias)
+        {
+            occlusion += rangeCheck;
+            color += texture(bColor, offset.xy).rgb;
+        }
+
     }   
 
-    _AO = (occlusion/float(kernelSize));
+    _AO.a = occlusion/float(kernelSize);
+
+    _AO.rgb = 2.0*(color/float(kernelSize));
+
+    // _AO.rgb = _AO.rgb*2.0;
+    // _AO.rgb = pow(_AO.rgb, vec3(0.25));
+
 }
