@@ -81,7 +81,8 @@ void main()
 
 /******* Ambient Occlusion *******/
     vec4 AO = getBlurAO(uv);
-    _fragColor.rgb *= vec3(1.0 - AO.r);
+    _fragColor.rgb *= vec3(1.0 - AO.a);
+    _fragColor.rgb += AO.rgb;
 
 
 /******* Blomm & Exposure Tonemapping *******/
