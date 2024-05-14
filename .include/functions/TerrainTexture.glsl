@@ -1,6 +1,6 @@
 layout (binding = 3) uniform sampler2D bTerrainMap;
-layout (binding = 4) uniform sampler2D bTerrainCE[4];
-layout (binding = 8) uniform sampler2D bTerrainNRM[4];
+layout (binding = 5) uniform sampler2D bTerrainCE[4];
+layout (binding = 9) uniform sampler2D bTerrainNRM[4];
 
 vec4 getTerrainTexture(vec4 factors, vec2 uv, sampler2D textures[4])
 {

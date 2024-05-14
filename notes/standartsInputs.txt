@@ -51,4 +51,5 @@ Position    Name            TAG
     2       bMaterial
     3       bHeight         USING_LOD_TESSELATION
     3       bDisp           USING_LOD_TESSELATION
+    4       bSkyTexture
   16-32     bShadowMaps[]

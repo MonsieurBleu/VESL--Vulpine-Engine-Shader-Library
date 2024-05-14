@@ -19,7 +19,7 @@ void main()
 {
     vec3 bodyColor = _textColor;
 
-    bodyColor = bold > 0 ? bodyColor*vec3(0.75, 1.2, 2.0) : bodyColor;
+    bodyColor = bold > 0 ? bodyColor*vec3(0.5, 1.4, 2.5) : bodyColor;
 
     vec3 outlineColor = italic > 0 ? bodyColor*0.2 : bodyColor*0.4;
 
