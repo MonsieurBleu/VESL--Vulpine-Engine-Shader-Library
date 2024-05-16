@@ -102,7 +102,7 @@ ivec3 getClusterId(const float ivFar, const ivec3 steps)
 {
     vec3 id = gl_FragCoord.rgb;
     id.rg /= vec2(_iResolution);
-    id.b = ivFar/id.b;
+    id.b = ivFar / id.b;
 
     return ivec3(floor(id*vec3(steps)));
 }
@@ -138,8 +138,7 @@ Material getMultiLight()
     id *= 128;
 
     int lid = 0;
-
-
+    
     for(;; id++)
     {
         int lid = lightsID[id];
