@@ -24,8 +24,25 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
 
     vec3 halfwayDir = normalize(-lightDirection + viewDir);
     float nDotH = max(dot(normalComposed, halfwayDir), 0.0);
-    float nDotH2 = nDotH * nDotH;
     float nDotL = max(dot(normalComposed, -lightDirection), 0.0);
+
+    #ifdef USE_TOON_SHADING
+        // float tmp3 = 0.01;
+        // nDotL = smoothstep(tmp3, tmp3+0.01, nDotL);
+
+        // float tmp3 = 0.25; nDotL *= smoothstep(tmp3, tmp3+0.25, nDotL);
+
+        float tmp3 = 0.0; nDotL = smoothstep(tmp3, tmp3+0.5, nDotL);
+
+        // float tmp4 = (1.0-mRoughness);
+        // float tmp4 = 0.5;
+        // nDotH= smoothstep(tmp4, tmp4+0.01, nDotH);
+
+        // float tmp5 = 0.0;
+        // nDotV = smoothstep(tmp5, 0.85, nDotV);
+    #endif
+
+    float nDotH2 = nDotH * nDotH;
 
     vec3 fresnelSchlick = F0 + (1.0 - F0) * pow(1.0 - nDotH, 5.0);
 
@@ -40,9 +57,22 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
 
     vec3 kD = (vec3(1.0) - fresnelSchlick) * (1.0 - mMetallic);
     vec3 diffuse = kD * color / PI;
-
+    
+    
     Material result;
-    result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
+    #ifdef USE_TOON_SHADING
+        float tmp1 = (1-mRoughness)*0.25 
+            *pow(fresnelSchlick.x, 0.5)
+            ;
+        specular *= smoothstep(tmp1, tmp1+0.001, specular);
+        result.result = (specular + diffuse) * lightColor * nDotL * 1.25;
+    #else
+        result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
+    #endif
+
+    
+
+    
 
     return result;
 }

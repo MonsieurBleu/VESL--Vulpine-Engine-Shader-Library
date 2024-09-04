@@ -3,15 +3,29 @@
 #include functions/Noise.glsl
 #include functions/standardMaterial.glsl
 
+vec3 lcalcPosition;
 
 /*
     Efficient soft-shadow with percentage-closer filtering
     link : https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-17-efficient-soft-edged-shadows-using
 */
+#ifndef ESS_BASE_ITERATION
+#define ESS_BASE_ITERATION 8
+#endif
+
+#ifndef ESS_PENUMBRA_ITERATION
+#define ESS_PENUMBRA_ITERATION 64
+#endif
+
+#ifndef ESS_BASE_PENUMBRA_RADIUS
+#define ESS_BASE_PENUMBRA_RADIUS 0.001
+#endif
+
+
 #define EFFICIENT_SMOOTH_SHADOW
 float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
 {
-    vec4 mapPosition = rMatrix * vec4(position, 1.0);
+    vec4 mapPosition = rMatrix * vec4(lcalcPosition, 1.0);
     mapPosition.xyz /= mapPosition.w;
     mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
 
@@ -22,16 +36,16 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
     float res = 0.;
     float bias = 0.00005; // 0.00002
     // bias /= 1.0 + nDotL;
-    float radius = 0.001; // 0.0015
+    float radius = ESS_BASE_PENUMBRA_RADIUS; // 0.0015
 
     #ifdef EFFICIENT_SMOOTH_SHADOW
-        int it = 8;
-        int itPenumbra = 64;
+        int it = ESS_BASE_ITERATION;
+        int itPenumbra = ESS_PENUMBRA_ITERATION;
         int i = 0;
 
         for (; i < it; i++)
         {
-            vec2 rand = vec2(gold_noise3(position, i), gold_noise3(position, -i));
+            vec2 rand = vec2(gold_noise3(lcalcPosition, i), gold_noise3(lcalcPosition, -i));
             // vec2 rand = 0.5 - random2(position+i);
             vec2 samplePos = mapPosition.xy + 2.0 * radius * rand;
             float d = texture(shadowmap, samplePos).r;
@@ -49,7 +63,7 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
 
             for (; i < itPenumbra; i++)
             {
-                vec2 rand = vec2(gold_noise3(position, i), gold_noise3(position, -i));
+                vec2 rand = vec2(gold_noise3(lcalcPosition, i), gold_noise3(lcalcPosition, -i));
                 // vec2 rand = 0.5 - random2(position+i);
                 vec2 samplePos = mapPosition.xy + radius * rand;
                 float d = texture(shadowmap, samplePos).r;
@@ -88,9 +102,9 @@ void getLightPoint(
     in float intensity)
 {
     float maxDist = max(radius, 0.0001);
-    float distFactor = max(maxDist - distance(position, lPosition), 0.) / maxDist;
+    float distFactor = max(maxDist - distance(lcalcPosition, lPosition), 0.) / maxDist;
     factor = distFactor * distFactor * intensity;
-    lightResult = getLighting(normalize(position - lPosition), color);
+    lightResult = getLighting(normalize(lcalcPosition - lPosition), color);
 }
 
 /*

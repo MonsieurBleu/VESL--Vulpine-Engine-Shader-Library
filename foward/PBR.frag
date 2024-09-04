@@ -48,6 +48,8 @@ void main()
     vec4 NRM = texture(bMaterial, uv);
 #endif
 
+    lcalcPosition = position;
+
     if(NRM.x <= 0.01 && NRM.y <= 0.01)
         discard;
 
