@@ -82,7 +82,7 @@ void main()
         terrainHeight = h;
         terrainUv = hUv;
     #endif
-        const float hfact = 2.0;
+        const float hfact = 0.0;
         h = (hfact*h+h1+h2+h3+h4)/(hfact+4.0);
         positionInModel += normalG*(h-0.5)*lodHeightDispFactors.w;
     }

@@ -40,10 +40,14 @@ void main()
     float h1 = texture(bHeight, uv + vec2(hmBias, 0.0)).r;
     float h2 = texture(bHeight, uv + vec2(0.0, hmBias)).r;
 
+    h0 = h0-0.5;
+    h1 = h1-0.5;
+    h2 = h2-0.5;
+
     const float hmAmplitude = 1.0;
-    positionInModel += normal*(h0 - 0.5)*hmAmplitude;
-    modPos2 += normal*(h1 - 0.5)*hmAmplitude;
-    modPos3 += normal*(h2 - 0.5)*hmAmplitude;
+    positionInModel += normal*h0*hmAmplitude;
+    modPos2 += normal*h1*hmAmplitude;
+    modPos3 += normal*h2*hmAmplitude;
     normal = normalize(cross((modPos3 - positionInModel), (modPos2 - positionInModel)));
 
 /******* DISPLACEMENT MAP *******/

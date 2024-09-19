@@ -59,13 +59,21 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
     vec3 diffuse = kD * color / PI;
     
     
+    
     Material result;
     #ifdef USE_TOON_SHADING
-        float tmp1 = (1-mRoughness)*0.25 
-            *pow(fresnelSchlick.x, 0.5)
-            ;
-        specular *= smoothstep(tmp1, tmp1+0.001, specular);
-        result.result = (specular + diffuse) * lightColor * nDotL * 1.25;
+        // float tmp1 = (1-mRoughness)*0.25 
+        //     *pow(fresnelSchlick.x, 0.5)
+        //     ;
+        // specular *= smoothstep(tmp1, tmp1+0.001, specular);
+
+        // lightColor *= 2 .0; 
+        
+        // diffuse += step(vec3(1.0), diffuse);
+
+        specular += specular*vec3(nDotH2)*2.0;
+
+        result.result = (specular + diffuse) * lightColor * nDotL;
     #else
         result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
     #endif
@@ -197,7 +205,12 @@ vec3 getStandardEmmisive(vec3 fcolor)
     // vec3 finalEmmisive = mix(baseEmmissive, 2.0*fcolor, mEmmisive);
 
     // vec3 baseEmmissive = fcolor*pow(rgb2v(fcolor), 2.0);
-    vec3 baseEmmissive = pow(fcolor, vec3(1.5));
+
+    // vec3 baseEmmissive = pow(fcolor, vec3(1.5));
+
+    vec3 baseEmmissive = pow(fcolor, vec3(5.0));
+
+
     vec3 finalEmmisive = baseEmmissive * (1.0 + 2.0 * mEmmisive);
 
     return finalEmmisive;
