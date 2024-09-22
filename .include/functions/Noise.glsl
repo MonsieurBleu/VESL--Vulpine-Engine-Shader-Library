@@ -16,6 +16,15 @@ vec2 goldNoiseCustom(in vec3 coordinate, in float seed)
         );
 }
 
+vec3 goldNoise3to3(in vec3 coordinate, in float seed)
+{
+    return vec3(
+        fract(tan(0.859*distance(coordinate.xy*PHI, coordinate.xz)*seed)*coordinate.y),
+        fract(tan(1.589*distance(coordinate.yz*PHI, coordinate.zx)*seed)*coordinate.z),
+        fract(tan(2.099*distance(coordinate.zy*PHI, coordinate.yz)*seed)*coordinate.x)
+        );
+}
+
 // https://github.com/tt6746690/computer-graphics-shader-pipeline/blob/master/src/random2.glsl
 vec2 random2(vec3 st){
   vec2 S = vec2( dot(st,vec3(127.1,311.7,783.089)),

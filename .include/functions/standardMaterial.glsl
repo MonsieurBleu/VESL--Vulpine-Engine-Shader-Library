@@ -30,9 +30,9 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
         // float tmp3 = 0.01;
         // nDotL = smoothstep(tmp3, tmp3+0.01, nDotL);
 
-        // float tmp3 = 0.25; nDotL *= smoothstep(tmp3, tmp3+0.25, nDotL);
+        float tmp3 = 0.1; nDotL *= smoothstep(tmp3, tmp3+0.1, nDotL);
 
-        float tmp3 = 0.0; nDotL = smoothstep(tmp3, tmp3+0.5, nDotL);
+        // float tmp3 = 0.0; nDotL = smoothstep(tmp3, tmp3+0.5, nDotL);
 
         // float tmp4 = (1.0-mRoughness);
         // float tmp4 = 0.5;
@@ -69,11 +69,11 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
 
         // lightColor *= 2 .0; 
         
-        // diffuse += step(vec3(1.0), diffuse);
+        // diffuse = step(vec3(0.1), diffuse);
 
-        specular += specular*vec3(nDotH2)*2.0;
+        // specular += specular*vec3(nDotH2);
 
-        result.result = (specular + diffuse) * lightColor * nDotL;
+        result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
     #else
         result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
     #endif
@@ -208,7 +208,7 @@ vec3 getStandardEmmisive(vec3 fcolor)
 
     // vec3 baseEmmissive = pow(fcolor, vec3(1.5));
 
-    vec3 baseEmmissive = pow(fcolor, vec3(5.0));
+    vec3 baseEmmissive = pow(fcolor, vec3(2.0) + rgb2v(fcolor)*50.0);
 
 
     vec3 finalEmmisive = baseEmmissive * (1.0 + 2.0 * mEmmisive);

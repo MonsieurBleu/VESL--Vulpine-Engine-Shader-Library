@@ -1,5 +1,9 @@
 #version 460
 
+#ifdef ARB_BINDLESS_TEXTURE
+#extension GL_ARB_bindless_texture : require
+#endif
+
 layout (triangles, equal_spacing, ccw) in;
 // layout (triangles, fractional_even_spacing, ccw) in;
 
@@ -17,19 +21,20 @@ in vec3 patchNormal[];
 #define DONT_RETREIVE_UV;
 
 #ifdef ARB_BINDLESS_TEXTURE
-layout (location = 20, bindless_sampler) uniform sampler2D bColor;
-layout (location = 21, bindless_sampler) uniform sampler2D bMaterial;
-layout (location = 22, bindless_sampler) uniform sampler2D bHeight;
+    layout (location = 20, bindless_sampler) uniform sampler2D bColor;
+    // layout (location = 21, bindless_sampler) uniform sampler2D bMaterial;
+    layout (location = 22, bindless_sampler) uniform sampler2D bHeight;
 #else
-layout(binding = 0) uniform sampler2D b_Color;
-layout(binding = 1) uniform sampler2D bMaterial;
-layout(binding = 2) uniform sampler2D bHeight;
+    layout(binding = 0) uniform sampler2D b_Color;
+    layout(binding = 1) uniform sampler2D bMaterial;
+    layout(binding = 2) uniform sampler2D bHeight;
 #endif
 
 #ifdef USING_TERRAIN_RENDERING
 #include functions/TerrainTexture.glsl
 out vec2 terrainUv;
 out float terrainHeight;
+out vec3 modelPosition;
 #endif
 
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec3 coord)
@@ -44,6 +49,8 @@ vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2, vec3 coord)
 
 void main()
 {
+    terrainHeight = 0.f;
+
     vec3 hTessCoord = gl_TessCoord;
     vec3 p1 = patchPosition[0]; vec3 p2 = patchPosition[1]; vec3 p3 = patchPosition[2];  
 
@@ -76,7 +83,7 @@ void main()
         vec3 n3 = -normalize(cross(nP2-nP1, nP5-nP1));
         vec3 n4 = -normalize(cross(nP4-nP1, nP3-nP1));
 
-        normal = normalize(n1+n2+n3+n4);
+        normal = (n1+n2+n3+n4)/4;
 
     #ifdef USING_TERRAIN_RENDERING
         terrainHeight = h;
@@ -101,6 +108,8 @@ void main()
         positionInModel += dispAmpl * hDisp * normalDisp;
         uv = uvDisp;
     }
+
+    modelPosition = positionInModel;
 
     mat4 modelMatrix = _modelMatrix;
     #include code/SetVertex3DOutputs.glsl
