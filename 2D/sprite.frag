@@ -6,8 +6,6 @@
 layout (location = 0) out vec4 fragColor;
 layout (binding = 0) uniform sampler2D bAtlas;
 
-layout (location = 32) uniform vec3 _textColor;
-
 in vec2 atlasUV;
 in vec3 position;
 in flat uint bold;
@@ -17,15 +15,5 @@ in flat uint italic;
 
 void main()
 {
-    vec3 bodyColor = _textColor;
-
-    bodyColor = bold > 0 ? bodyColor*0.75 : bodyColor;
-
-    vec3 outlineColor = vec3(0.f);
-
-    float opacity = getFontAlpha(bAtlas, atlasUV);
-
-    fragColor = vec4(bodyColor, opacity);
-    
-    if(opacity < 1e-2) discard;
+    fragColor = texture(bAtlas, atlasUV);
 }
