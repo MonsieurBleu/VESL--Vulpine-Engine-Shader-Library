@@ -35,6 +35,7 @@ void main()
     {
         const int MIN_TESS_LEVEL = int(lodTessLevelDistance.x);
         const int MAX_TESS_LEVEL = int(lodTessLevelDistance.y);
+        
         const float MIN_DISTANCE = lodTessLevelDistance.z;
         const float MAX_DISTANCE = lodTessLevelDistance.w;
 

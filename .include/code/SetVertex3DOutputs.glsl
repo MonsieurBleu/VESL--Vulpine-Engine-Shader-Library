@@ -1,7 +1,8 @@
 
-
 #ifndef USING_VERTEX_TEXTURE_UV
-    color = _color;
+    #ifndef USING_VERTEX_PACKING
+        vcolor = _color;
+    #endif
 #else
     #ifndef DONT_RETREIVE_UV
     uv = vec2(_uv.x , 1.0 - _uv.y);

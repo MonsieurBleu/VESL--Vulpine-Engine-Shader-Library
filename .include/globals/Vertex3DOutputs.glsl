@@ -1,5 +1,5 @@
 #ifndef USING_VERTEX_TEXTURE_UV
-    out vec3 color;
+    out vec3 vcolor;
 #else
     out vec2 uv;
 #endif

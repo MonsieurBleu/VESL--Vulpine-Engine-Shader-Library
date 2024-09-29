@@ -25,15 +25,29 @@ vec3 getSkyboxReflection(vec3 v, vec3 n)
                 reflectDir.y*0.5 + 0.5
             );
 
-            /*
-                Fast roughness reflection blur
-            */
-            const float noiseMaxDist = 0.05;
-            vec3 noiseUv = vec3(uv, 1.0);
-            uvSky += (1.0 - 2.0*random2(noiseUv))*noiseMaxDist*mRoughness;
-            uvSky.y = clamp(uvSky.y, 0.f, 0.999);
+            vec3 r = vec3(0);
 
-            return getSkyColor(uvSky); 
+            for(int i = 0; i < 4; i++)
+            {
+                vec2 uvSky2 = uvSky;
+                /*
+                    Fast roughness reflection blur
+                */
+                const float noiseMaxDist = 0.05;
+
+                #ifdef USING_VERTEX_TEXTURE_UV
+                vec3 noiseUv = vec3(uv, 1.0);
+                #else
+                vec3 noiseUv = modelPosition;
+                #endif
+
+                uvSky2 += (1.0 - 2.0*random2(noiseUv + i))*noiseMaxDist*mRoughness;
+                uvSky2.y = clamp(uvSky2.y, 0.f, 0.999);
+
+                r += getSkyColor(uvSky); 
+            }
+
+            return r/4.0; 
         #endif
     #else
         return vec3(0.f);
