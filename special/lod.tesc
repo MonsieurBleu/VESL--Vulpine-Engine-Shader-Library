@@ -47,17 +47,28 @@ void main()
         vec3 distances = clamp((depths-MIN_DISTANCE)/(MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0);
 
         vec3 tessDist = vec3( min(distances[1], distances[2]), min(distances[2], distances[0]), min(distances[0], distances[1]));
+        
+        tessDist = 1.0 - pow(tessDist, vec3(0.25));
+
+        float snapVal = 4;
+        tessDist = round(tessDist*snapVal)/snapVal;
+
         ivec3 tessLevel;
 
+        // for(int i = 0; i < 3; i++)
+        //     if(tessDist[i] > 0.999)
+        //         tessLevel[i] = MIN_TESS_LEVEL;
+        //     else if(tessDist[i] > 0.5)
+        //         tessLevel[i] = MAX_TESS_LEVEL/4;
+        //     else if(tessDist[i] > 0.1)
+        //         tessLevel[i] = MAX_TESS_LEVEL/2 - 1;
+        //     else
+        //         tessLevel[i] = MAX_TESS_LEVEL;
+
         for(int i = 0; i < 3; i++)
-            if(tessDist[i] > 0.999)
-                tessLevel[i] = MIN_TESS_LEVEL;
-            else if(tessDist[i] > 0.5)
-                tessLevel[i] = MAX_TESS_LEVEL/4;
-            else if(tessDist[i] > 0.1)
-                tessLevel[i] = MAX_TESS_LEVEL/2 - 1;
-            else
-                tessLevel[i] = MAX_TESS_LEVEL;
+        {
+            tessLevel[i] = int(round(MIN_TESS_LEVEL + (MAX_TESS_LEVEL-MIN_DISTANCE)*tessDist[i]));
+        }
 
         gl_TessLevelOuter[0] = tessLevel.x;
         gl_TessLevelOuter[1] = tessLevel.y;

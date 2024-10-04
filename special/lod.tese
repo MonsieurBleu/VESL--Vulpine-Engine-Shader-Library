@@ -98,6 +98,20 @@ void main()
         float a[6] = float[6](0.1, 0.6, -0.25, -0.48, 0.25, -0.9);
         // float a[6] = float[6](1.0, 0.0, -1.0, 0.0, 1.0, 0.5);
 
+        vec2 s[8] = vec2[8](
+            vec2( 1.,  1.),
+            vec2( 1., -1.),
+            vec2(-1.,  1.),
+            vec2(-1., -1.),
+
+            vec2( .5,  .5),
+            vec2( .5, -.5),
+            vec2(-.5,  .5),
+            vec2(-.5, -.5)
+        );
+
+        const float f[8] = const float[8](1., 1., 1., 1., .5, .5, .5, .5);
+
         // normal = vec3(0);
 
         // for(int i = 0; i < 5; i++)
@@ -139,20 +153,23 @@ void main()
         // normal = sign(normal)*normalize(clamp3D(abs(normal), 20));
         // normal = normalize(normal);
 
-        for(int i = 0; i < 5; i++)
+        for(int i = 0; i < 8; i++)
         {
-            vec2 uvb = 0.01*vec2(a[i], a[i+1]);
+            // vec2 uvb = 0.01*vec2(a[i], a[i+1]);
+            vec2 uvb = 0.005*s[i];
+
+
             vec2 uvs = clamp(hUv + uvb, vec2(1e-3), vec2(1-1e-3));
             float _h = texture(bHeight, uvs).r;
-
-            // h = mix(h, _h, 0.5);
-            h += _h;
+            h += _h*f[i];
         }
+        h /= 7.0;
+        
 
-        h /= 5.0;
+        // h = texture(bHeight, clamp(hUv, 0.001, 0.999)).r;
         positionInModel += normalG*(h-0.5)*lodHeightDispFactors.w;
 
-        const float bias = 0.01*lodHeightDispFactors.z;
+        const float bias = 0.005*lodHeightDispFactors.z;
 
         float h1 = texture(bHeight, clamp(hUv+vec2(bias, 0), 0.001, 0.999)).r;
         float h2 = texture(bHeight, clamp(hUv-vec2(bias, 0), 0.001, 0.999)).r;
@@ -171,9 +188,9 @@ void main()
         vec3 n4 = -normalize(cross(nP4-nP1, nP3-nP1));
         normal = normalize(
             +n1 
-            +n2 
-            +n3 
-            +n4 
+            // +n2 
+            // +n3 
+            // +n4 
             );
         // normal = n4;
 
