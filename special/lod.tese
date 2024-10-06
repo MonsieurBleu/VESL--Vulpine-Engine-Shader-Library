@@ -153,30 +153,37 @@ void main()
         // normal = sign(normal)*normalize(clamp3D(abs(normal), 20));
         // normal = normalize(normal);
 
+        float slope = 1e-9; // TODO : add a slope controlled normal sampling bias
+        float htmp = h;
+
         for(int i = 0; i < 8; i++)
         {
             // vec2 uvb = 0.01*vec2(a[i], a[i+1]);
-            vec2 uvb = 0.005*s[i];
-
-
+            vec2 uvb = 0.0025*s[i];
             vec2 uvs = clamp(hUv + uvb, vec2(1e-3), vec2(1-1e-3));
             float _h = texture(bHeight, uvs).r;
+
+            slope = max(slope, abs(htmp-_h))/0.0025;
+
             h += _h*f[i];
         }
         h /= 7.0;
-        
 
         // h = texture(bHeight, clamp(hUv, 0.001, 0.999)).r;
         positionInModel += normalG*(h-0.5)*lodHeightDispFactors.w;
 
-        const float bias = 0.005*lodHeightDispFactors.z;
+        slope = clamp(slope, 0, 1);
+        slope = pow(slope, 1.0);
+
+        const float bias = 0.0035*lodHeightDispFactors.z;
+        // const float bias = 0.01*slope*lodHeightDispFactors.z;
 
         float h1 = texture(bHeight, clamp(hUv+vec2(bias, 0), 0.001, 0.999)).r;
         float h2 = texture(bHeight, clamp(hUv-vec2(bias, 0), 0.001, 0.999)).r;
         float h3 = texture(bHeight, clamp(hUv+vec2(0, bias), 0.001, 0.999)).r;
         float h4 = texture(bHeight, clamp(hUv-vec2(0, bias), 0.001, 0.999)).r;
 
-        float dist = bias/lodHeightDispFactors.w;
+        float dist = 10.0*bias/lodHeightDispFactors.w;
         vec3 nP1 = normal*h; 
         vec3 nP2 = normal*h3 + vec3(0.0, 0.0, dist); 
         vec3 nP3 = normal*h1 + vec3(dist, 0.0, 0.0); 
@@ -188,9 +195,9 @@ void main()
         vec3 n4 = -normalize(cross(nP4-nP1, nP3-nP1));
         normal = normalize(
             +n1 
-            // +n2 
-            // +n3 
-            // +n4 
+            +n2 
+            +n3 
+            +n4 
             );
         // normal = n4;
 

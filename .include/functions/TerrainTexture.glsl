@@ -19,7 +19,8 @@ vec4 getTerrainFactorFromState(vec3 tNormal, float tH)
     factors.b = 1.0;
     factors.g = 1.0 - pow(smoothstep(0.0, 0.9, steep), 2.0);
     factors.a = 1.0 - pow(smoothstep(0.6, 1.0, steep), 3.0);
-    factors.r = smoothstep(0.275 + 0.05*steep, 0.330, tH);
+    float snowLevel = 0.65;
+    factors.r = smoothstep(snowLevel + 0.05*steep, snowLevel+0.1, tH);
     factors.r = factors.r * (1.0-factors.g);
     return factors;
 }
