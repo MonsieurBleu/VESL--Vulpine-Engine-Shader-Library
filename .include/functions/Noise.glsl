@@ -3,6 +3,39 @@
 
 #include globals/Constants.glsl
 
+
+/*****
+    ACTUAL GOOD AND SOMEWHAT FAST RANDOM FUNCTIONS INSPIRED BY GOLD NOISE
+
+    seed can be easly implemented
+*****/
+float rand3to1(vec3 p)
+{
+    return
+        fract(sin(distance(sign(p.xyz)+p.xyz*0.3*(0.25+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0);
+}
+
+vec2 rand3to2(vec3 p)
+{
+    return vec2(
+        fract(sin(distance(sign(p.xyz)+p.xyz*0.3*(0.25+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0),
+        fract(sin(distance(sign(p.yzx)+p.yzx*0.5*(0.32+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0)
+    );
+}
+
+vec3 rand3to3(vec3 p)
+{
+    return vec3(
+        fract(sin(distance(sign(p.xyz)+p.xyz*0.3*(0.25+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0),
+        fract(sin(distance(sign(p.yzx)+p.yzx*0.5*(0.32+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0),
+        fract(sin(distance(sign(p.zxy)+p.zxy*0.2*(0.21+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0)
+    );
+}
+
+
+
+
+
 // https://www.shadertoy.com/view/wtsSW4
 float gold_noise3(in vec3 coordinate, in float seed){
     return 0.5 - fract(tan(distance(coordinate*(seed+PHI*00000.1), vec3(PHI*00000.1, PI*00000.1, E)))*SQR2*10000.0);
@@ -39,6 +72,7 @@ float random (in vec2 st) {
 }
 
 
+
 // https://github.com/MaxBittker/glsl-voronoi-noise
     const mat2 vor3d_myt = mat2(.12121212, .13131313, -.13131313, .12121212);
     const vec2 vor3d_mys = vec2(1e4, 1e6);
@@ -50,13 +84,23 @@ float random (in vec2 st) {
         return fract(fract(uv / vor3d_mys) * uv);
     }
 
+    // vec3 vor3d_hash(vec3 p)
+    // {
+    //     return fract(
+    //         sin(vec3(dot(p, vec3(1.0, 57.0, 113.0)), dot(p, vec3(57.0, 113.0, 1.0)),
+    //                 dot(p, vec3(113.0, 1.0, 57.0)))) *
+    //         43758.5453);
+    // }
+
     vec3 vor3d_hash(vec3 p)
     {
-        return fract(
-            sin(vec3(dot(p, vec3(1.0, 57.0, 113.0)), dot(p, vec3(57.0, 113.0, 1.0)),
-                    dot(p, vec3(113.0, 1.0, 57.0)))) *
-            43758.5453);
+        return vec3(
+            fract(sin(distance(sign(p.xyz)+p.xyz*0.3*(0.25+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0),
+            fract(sin(distance(sign(p.yzx)+p.yzx*0.5*(0.32+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0),
+            fract(sin(distance(sign(p.zxy)+p.zxy*0.2*(0.21+PHI*1e-5), vec3(PHI*1e-5, PI*1e-5, E)))*SQR2*10000.0)
+        );
     }
+
 
     vec3 voronoi3d(const in vec3 x, in out vec3 cell_center)
     {
