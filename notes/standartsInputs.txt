@@ -12,7 +12,7 @@ Uniforms :
         7       mat4        _cameraInverseViewMatrix
         8
         9
-        10
+        10      vec4        lodHeigtTextureRange        USING_LOD_TESSELATION
         11      vec4        lodHeightDispFactors        USING_LOD_TESSELATION
         12      vec4        lodTessLevelDistance        USING_LOD_TESSELATION
         13      float       vFarLighting                USE_CLUSTERED_RENDERING
@@ -34,7 +34,7 @@ VAO :
         1       vec3    _normal
         2       vec3    _color              !USING_VERTEX_TEXTURE_UV
         2       vec2    _uv                 USING_VERTEX_TEXTURE_UV
-    3-4      mat4    _instanceMatrix     USING_INSTANCING
+       3-4      mat4    _instanceMatrix     USING_INSTANCING
         5       ivec4   _weightsID          USE_SKINNING
         6       vec4    _weights            USE_SKINNING
 

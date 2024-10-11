@@ -27,7 +27,7 @@ out vec3 vertexNormal;
 
 void main()
 {
-    vertexUv = vec2(_uv.x , 1.0 - _uv.y);
+    vertexUv = lodHeigtTextureRange.xy  + vec2(_uv.x , 1.0 - _uv.y)*(lodHeigtTextureRange.zw - lodHeigtTextureRange.xy);
     vertexPos = _positionInModel;
     vertexNormal = _normal;
 }
