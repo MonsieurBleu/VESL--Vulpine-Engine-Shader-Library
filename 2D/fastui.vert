@@ -11,16 +11,20 @@ out vec2 uv;
 out vec4 color;
 out flat int type;
 out float aspectRatio;
+out float scale;
 
 void main()
 {
     uv = _uvType.xy;
     color = _color;
     type = int(_uvType.z);
-    aspectRatio = _uvType.a;
 
-    vec3 position = (_modelMatrix * vec4(_position, 1.0)).rgb;
-    position.xy *= vec2(_iResolution.yx)/float(_iResolution.y);
+    aspectRatio = _uvType.a * float(_iResolution.x)/float(_iResolution.y);
+
+    scale = _position.z;
+
+    vec3 position = (_modelMatrix * vec4(_position * vec3(1, 1, 0), 1.0)).rgb;
+    // position.xy *= vec2(_iResolution.yx)/float(_iResolution.y);
     gl_Position = vec4(position, 1.0);
 }
 

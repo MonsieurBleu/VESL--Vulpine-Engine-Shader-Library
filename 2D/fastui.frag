@@ -2,6 +2,7 @@
 
 #include uniform/Base2D.glsl
 #include uniform/Model3D.glsl
+#include functions/HSV.glsl
 
 layout(location = 0) out vec4 fragColor;
 
@@ -9,11 +10,12 @@ in vec2 uv;
 in vec4 color;
 in flat int type;
 in float aspectRatio;
+in float scale;
 
 const float SMOOTHSTEP_BORDER = 0.01;
 // const float SMOOTHSTEP_BORDER_SQUARED = SMOOTHSTEP_BORDER*SMOOTHSTEP_BORDER;
 
-const float borderSize = 0.075;
+float borderSize = 0.05;
 
 vec2 arCorrection = vec2(0);
 
@@ -54,18 +56,43 @@ void main() {
     float border = 0.;
     vec2 uvAR = uv;
     arCorrection = aspectRatio > 1. ? vec2(aspectRatio, 1.0) : vec2(1.0, 1.0 / aspectRatio);
+    // borderSize /= scale;
+
+    // uvAR /= scale;
 
     switch(type) {
         case 0:
-            border = drawSquare(uv);
+            border = drawSquare(uvAR);
             break;
         case 1:
-            border = drawSquareRounded(0.5, uv);
+            border = drawSquareRounded(min(1.0, 0.05 / scale), uvAR);
             break;
         case 2:
-            border = drawCircle(uv);
+            border = drawCircle(uvAR);
             break;
     }
 
-    fragColor.rgb *= (1.0 - border) * 0.5 + 0.5;
+
+    // fragColor.a = 0.9;
+    // border = drawSquareRounded(min(1.0, 0.05 / scale), uvAR);
+
+
+    // fragColor.rgb = vec3(cos(_iTime)*0.5 + 0.5, 0.75, 0.75);
+    // fragColor.rgb = hsv2rgb(fragColor.rgb);
+    // fragColor.rgb *= (1.0 - border) * 0.5 + 0.5;
+
+    if(border > 0.0)
+    {
+        fragColor.rgb = rgb2hsv(fragColor.rgb);        
+        fragColor.z = fragColor.z * pow(1.0-fragColor.z, 0.5);
+        fragColor.rgb = hsv2rgb(fragColor.rgb);
+        
+        fragColor.a += sign(fragColor.a)*0.1;
+    }
+    else
+    {
+
+    }
+
+    // fragColor.a *= 1e3;
 }

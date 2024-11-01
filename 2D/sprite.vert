@@ -33,8 +33,28 @@ void main() {
     ))
         position.x += 0.005;
 
-    position = (_modelMatrix * vec4(position, 1.0)).rgb;
-    position.xy *= vec2(_iResolution.yx) / float(_iResolution.y);
+    
+    mat4 model = _modelMatrix;
+
+    // vec3 scale = vec3(1.f);
+    
+    // float aspectXY = float(_iResolution.x)/float(_iResolution.y);
+    // if(aspectXY > 1.f)
+    // {
+    //     scale.x = 1.0/aspectXY;
+    // }
+    // else
+    // {
+    //     scale.y = aspectXY;
+    // }
+
+    // model[0] = scale.x * model[0];
+    // model[1] = scale.y * model[1];
+    // model[2] = scale.z * model[2];
+    
+    
+    position = (model * vec4(position, 1.0)).rgb;
+    // position.xy *= vec2(_iResolution.yx) / float(_iResolution.y);
 
 
     gl_Position = vec4(position, 1.0);
