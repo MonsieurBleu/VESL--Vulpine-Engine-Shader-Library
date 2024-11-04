@@ -88,7 +88,7 @@ void main()
             vec2(-.5, -.5)
         );
 
-        const float f[8] = const float[8](1., 1., 1., 1., .5, .5, .5, .5);
+        const float f[8] = float[8](1., 1., 1., 1., .5, .5, .5, .5);
 
         float slope = 1e-9; // TODO : add a slope controlled normal sampling bias
         float htmp = h;
