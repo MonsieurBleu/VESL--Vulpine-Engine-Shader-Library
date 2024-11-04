@@ -102,7 +102,7 @@ float random (in vec2 st) {
     }
 
 
-    vec3 voronoi3d(const in vec3 x, in out vec3 cell_center)
+    vec3 voronoi3d(const in vec3 x, inout vec3 cell_center)
     {
         vec3 p = floor(x);
         vec3 f = fract(x);
