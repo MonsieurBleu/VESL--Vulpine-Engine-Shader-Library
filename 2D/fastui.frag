@@ -56,12 +56,15 @@ void main() {
     float border = 0.;
     vec2 uvAR = uv;
     arCorrection = aspectRatio > 1. ? vec2(aspectRatio, 1.0) : vec2(1.0, 1.0 / aspectRatio);
-    // borderSize /= scale;
+    // borderSize /= pow(scale, 1.75);
+    // borderSize *= 0.025;
 
     // uvAR /= scale;
 
     switch(type) {
         case 0:
+            borderSize /= scale;
+            borderSize *= 0.1;
             border = drawSquare(uvAR);
             break;
         case 1:
