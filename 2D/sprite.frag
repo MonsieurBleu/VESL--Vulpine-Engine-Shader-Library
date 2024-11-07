@@ -4,44 +4,56 @@
 #include uniform/Model3D.glsl
 
 layout (location = 0) out vec4 fragColor;
-layout (binding = 0) uniform sampler2D bAtlas;
 
-layout (location = 32) uniform vec3 _textColor;
+layout (binding = 0) uniform sampler2D bTexture;
 
-in vec2 atlasUV;
-in vec3 position;
-in flat uint bold;
-in flat uint italic;
+in vec2 uv;
 
-#include functions/Font.glsl
+in vec2 scale;
 
 void main()
 {
-    vec3 bodyColor = _textColor;
+    vec2 tSize = vec2(textureSize(bTexture, 0));
 
-    // bodyColor = bold > 0 ? bodyColor*vec3(0.5, 1.4, 2.5) : bodyColor;
-    bodyColor = bold > 0 ? bodyColor*vec3(0.75, 0.75, 0.75) : bodyColor;
+    vec2 auv = uv;
+    vec2 ascale = scale;
+    // auv.y /= float(_iResolution.x)/float(_iResolution.y);
 
-    vec3 outlineColor = italic > 0 ? bodyColor*0.2 : bodyColor*0.4;
+    // auv.y *= tSize.x/tSize.y;
 
-    vec4 texel = texture(bAtlas, atlasUV);
-    float dist = median(texel.r, texel.g, texel.b);
+    ascale.y /= float(_iResolution.x)/float(_iResolution.y);
 
-    // float pxRange = 0.4;
-    // float pxDist = pxRange * (dist - 0.5);
-    // float opacity = smoothstep(-0.5, 0.25, pxDist);
-    // float opacity = smoothstep(-pxRange, pxRange*2, pxDist);
+    if(ascale.x > ascale.y)
+    {
+        auv.x *= ascale.x/ascale.y;
+        
+        // auv.x -= scale.x * (float(_iResolution.x)/float(_iResolution.y));
+        auv.x -= 0.5 * (scale.x/scale.y) * (float(_iResolution.x)/float(_iResolution.y));
+        auv.x += 0.5;
+    }
+    else
+    {
 
-    float outer = smoothstep(0.0, 0.0001, dist);
-    float inner = smoothstep(0.0, 0.4, dist);
+        auv.y /= ascale.x/ascale.y;
 
-    bodyColor = mix(outlineColor, bodyColor, pow(inner, 5.0));
+        auv.y += 0.5;
 
-    float opacity = outer;
+        auv.y -= 0.5 * (scale.y/scale.x) * (float(_iResolution.y)/float(_iResolution.x));
 
-    // fragColor = vec4(dist, dist, dist, 1.0);
+        // auv.y -= scale.y;
+    }
 
-    fragColor = vec4(bodyColor, opacity*2.0);
+    // fragColor = vec4(ascale, 0, 1);
+
+    // auv.y /= scale.x/scale.y;
+    // auv.x *= scale.x/scale.y;
+
+    fragColor = texture(bTexture, auv);
+    float bias = 1e-3;
+    if(
+        auv.x < bias || auv.y < bias || auv.x > 1-bias || auv.y > 1-bias
+    )
+        discard;
     
-    // if(opacity < 1e-2) discard;
+    if(fragColor.a == 0.f) discard;
 }

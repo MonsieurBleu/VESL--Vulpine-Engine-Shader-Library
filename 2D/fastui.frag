@@ -41,7 +41,6 @@ float drawSquareRounded(float cornerSize, vec2 inUv) {
     b = mix(b, b2, 1.0 - inBorder);
 
     return mix(b, b2, 1.0 - inBorder);
-    ;
 }
 
 float drawSquare(vec2 inUv) {
@@ -58,7 +57,7 @@ void main() {
     arCorrection = aspectRatio > 1. ? vec2(aspectRatio, 1.0) : vec2(1.0, 1.0 / aspectRatio);
     // borderSize /= pow(scale, 1.75);
     // borderSize *= 0.025;
-
+    borderSize *= 0.f;
     // uvAR /= scale;
 
     switch(type) {
@@ -68,7 +67,10 @@ void main() {
             border = drawSquare(uvAR);
             break;
         case 1:
-            border = drawSquareRounded(min(1.0, 0.05 / scale), uvAR);
+            border = drawSquareRounded(
+                // min(1.0, 0.05 / scale), 
+                0.03/scale,
+                uvAR);
             break;
         case 2:
             border = drawCircle(uvAR);
@@ -84,18 +86,20 @@ void main() {
     // fragColor.rgb = hsv2rgb(fragColor.rgb);
     // fragColor.rgb *= (1.0 - border) * 0.5 + 0.5;
 
-    if(border > 0.0)
-    {
-        fragColor.rgb = rgb2hsv(fragColor.rgb);        
-        fragColor.z = fragColor.z * pow(1.0-fragColor.z, 0.5);
-        fragColor.rgb = hsv2rgb(fragColor.rgb);
+    // if(border > 0.0)
+    // {
+    //     fragColor.rgb = rgb2hsv(fragColor.rgb);        
+    //     fragColor.z = fragColor.z * pow(1.0-fragColor.z, 0.5);
+    //     fragColor.rgb = hsv2rgb(fragColor.rgb);
         
-        fragColor.a += sign(fragColor.a)*0.1;
-    }
-    else
-    {
+    //     fragColor.a += sign(fragColor.a)*0.1;
+    // }
+    // else
+    // {
 
-    }
+    // }
 
-    // fragColor.a *= 1e3;
+    // fragColor.a = border;
+
+    if(fragColor.a == 0.f) discard;
 }

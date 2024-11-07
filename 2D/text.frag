@@ -19,7 +19,8 @@ void main()
 {
     vec3 bodyColor = _textColor.rgb;
 
-    bodyColor = bold > 0 ? bodyColor*vec3(0.5, 1.4, 2.5) : bodyColor;
+    // bodyColor = bold > 0 ? bodyColor*vec3(0.5, 1.4, 2.5) : bodyColor;
+    bodyColor = bold > 0 ? bodyColor*vec3(0.75, 0.75, 0.75) : bodyColor;
 
     vec3 outlineColor = italic > 0 ? bodyColor*0.2 : bodyColor*0.4;
 
@@ -31,16 +32,19 @@ void main()
     // float opacity = smoothstep(-0.5, 0.25, pxDist);
     // float opacity = smoothstep(-pxRange, pxRange*2, pxDist);
 
-    float outer = smoothstep(0.0, 0.0001, dist);
-    float inner = smoothstep(0.0, 0.4, dist);
+    float outer = smoothstep(0.0, 0.3, dist);
+    float inner = smoothstep(0.0, 0.5, dist);
 
-    bodyColor = mix(outlineColor, bodyColor, pow(inner, 5.0));
+    bodyColor = mix(outlineColor, bodyColor, pow(inner, 1.0));
 
     float opacity = outer;
 
     // fragColor = vec4(dist, dist, dist, 1.0);
 
-    fragColor = vec4(bodyColor, opacity*2.0);
+    fragColor = vec4(bodyColor, opacity);
     
     // if(opacity < 1e-2) discard;
+
+    fragColor.a *= _textColor.a;
+    if(fragColor.a == 0.f) discard;
 }

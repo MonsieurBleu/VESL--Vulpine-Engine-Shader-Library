@@ -1,10 +1,10 @@
 sprite
-:   mdFont
+:   sprite
     :   uniforms 2D
     :   shader/2D/sprite.frag
     :   shader/2D/sprite.vert
     ;
-:   mdFontdepthOnly
+:   spriteDO
     :   uniforms 2D
     :   shader/2D/sprite.frag
     :   shader/2D/sprite.vert

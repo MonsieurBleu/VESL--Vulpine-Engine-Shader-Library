@@ -35,7 +35,7 @@ void main() {
     normalComposed = normal;
     normalComposed = gl_FrontFacing ? normalComposed : -normalComposed;
 
-    fragColor.rgb = bColor;
+    fragColor.rgb = bColor.rgb;
     fragEmmisive = vec3(0);
 
     fragNormal = vec3(1.0);
