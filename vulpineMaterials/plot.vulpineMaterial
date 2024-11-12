@@ -1,0 +1,12 @@
+plot
+:   plot
+    :   uniforms 2D
+    :   shader/2D/plot.frag
+    :   shader/2D/plot.vert
+    ;
+:   plotDO
+    :   uniforms 2D
+    :   shader/2D/plot.frag
+    :   shader/2D/plot.vert
+    ;
+;
