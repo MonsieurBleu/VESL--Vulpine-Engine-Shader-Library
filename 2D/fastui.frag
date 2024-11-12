@@ -75,6 +75,13 @@ void main() {
         case 2:
             border = drawCircle(uvAR);
             break;
+
+        case 3:
+            fragColor.rgb = hsv2rgb(
+                rgb2hsv(color.rgb)*vec3(1., 0., 0.) 
+                + vec3(0, uv*0.5 + 0.5)
+                );
+            break;
     }
 
 
