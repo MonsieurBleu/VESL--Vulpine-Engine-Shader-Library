@@ -10,7 +10,7 @@ Uniforms :
         5       vec3        _cameraPosition
         6       vec3        _cameraDirection
         7       mat4        _cameraInverseViewMatrix
-        8
+        8       
         9
         10      vec4        lodHeigtTextureRange        USING_LOD_TESSELATION
         11      vec4        lodHeightDispFactors        USING_LOD_TESSELATION
