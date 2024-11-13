@@ -18,6 +18,8 @@ layout (location = 20, bindless_sampler) uniform sampler2D bTexture;
 layout (binding = 0) uniform sampler2D bTexture;
 #endif
 
+layout (location = 21) uniform vec3 sunDir;
+
 #include globals/Fragment3DInputs.glsl
 #include globals/Fragment3DOutputs.glsl
 
@@ -228,17 +230,20 @@ vec3 atmosphericScattering(
                                 MIE_BETA * (opticalDepthIn.y + opticalDepthOut.y) - 
                                 ABSORPTION_BETA * (opticalDepthIn.z + opticalDepthOut.z));
         
-        totalRay += density.x * attenuation;
-        totalMie += density.y * attenuation;
+        totalRay += max(density.x * attenuation, 0.0);
+        totalMie += max(density.y * attenuation, 0.0);
 
         rayPosIn += stepSizeIn;
     }
+
+    // return vec3(totalRay);
 
     vec3 opacity = exp(-(MIE_BETA * opticalDepthIn.y + 
                          RAY_BETA * opticalDepthIn.x + 
                          ABSORPTION_BETA * opticalDepthIn.z));
 
     float brightness = clamp(length(RAY_BETA * totalRay) * 10.0, 0.0, 1.0);
+    
 
     return (
         phaseRay * RAY_BETA * totalRay + 
@@ -255,15 +260,7 @@ void main()
     // color = pow(vec3(1.0) - exp(-color*exposure), vec3(1.0/gamma));
 
     vec3 planetPos = vec3(0, PLANET_RADIUS, 0);
-    float sunYaw = radians(-90.0);
-    float sunPitch = radians(179.0);
 
-    float d = 9e10;
-    vec3 sunPos = vec3(
-        sin(sunYaw) * d * cos(sunPitch), 
-        sin(sunPitch) * d,  
-        cos(sunYaw) * d * cos(sunPitch)
-    );
     
     vec2 ndc = (gl_FragCoord.xy / _iResolution) * 2.0 - 1.0;
     // ndc.y = -ndc.y;
@@ -274,8 +271,6 @@ void main()
     vec3 rayDirCamSpace = normalize(rayView.xyz / rayView.w);
 
     vec3 rayDir = normalize((inverse(_cameraViewMatrix) * vec4(rayDirCamSpace, 0.0)).xyz);
-    
-    vec3 lightDir = normalize(sunPos - planetPos);
 
     vec3 sunColor = vec3(1.0, 0.95, 0.85);
     vec3 lightIntensity = sunColor * 40.0;
@@ -284,7 +279,7 @@ void main()
     vec3 starsColor = getStars(rayDir, 40.0, 0.05, 0.5, 0.3);
     vec3 sceneColor = starsColor;
     
-    vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, lightDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS);
+    vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, sunDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS);
     vec3 finalColor = rayleighScatteringColor;
 
     finalColor = 1.0 - exp(-finalColor);
@@ -294,6 +289,14 @@ void main()
     // fragColor.rgb = viewDir;
     fragColor.a = 1.0;
     // fragEmmisive = getStandardEmmisive(fragColor.rgb, ambientLight);
+
+    // get ray angle distance to sun
+    float angle = dot(rayDir, sunDir);
+    if (angle > 0.999)
+    {
+        fragColor.rgb = vec3(1, 0, 1);
+    }
+    
 
     // fragEmmisive = 0.65*fragColor.rgb*(rgb2v(fragColor.rgb) - ambientLight);
 
