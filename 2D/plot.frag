@@ -17,8 +17,8 @@ void main()
 
     // d = pow(1.0 - d, 32.0);
 
-    d = pow(1.0 - d, 4.0);
+    d = pow(1.0 - d, 2.0);
 
     fragColor.rgb = color.rgb;
-    fragColor.a = color.a*d;
+    fragColor.a = color.a*d*2.0;
 }
