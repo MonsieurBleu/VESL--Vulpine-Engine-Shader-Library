@@ -121,8 +121,10 @@ vec3 getStars(vec3 viewDir, float scale, float starSize, float starDensity, floa
     return col;
 }
 
-#define OUT_STEPS 8
+// #define OUT_STEPS 8
+// #define IN_STEPS 32
 #define IN_STEPS 32
+#define OUT_STEPS 1
 
 
 // Constants from https://www.shadertoy.com/view/wlBXWK
