@@ -66,21 +66,31 @@ void main() {
             borderSize *= 0.1;
             border = drawSquare(uvAR);
             break;
-        case 1:
+        case 2:
+            border = drawCircle(uvAR);
+            break;
+
+        default :
             border = drawSquareRounded(
                 // min(1.0, 0.05 / scale), 
                 0.03/scale,
                 uvAR);
             break;
-        case 2:
-            border = drawCircle(uvAR);
-            break;
+    }
 
+    switch(type) {
         case 3:
             fragColor.rgb = hsv2rgb(
                 rgb2hsv(color.rgb)*vec3(1., 0., 0.) 
                 + vec3(0, uv*0.5 + 0.5)
                 );
+            break;
+
+        case 4:
+            fragColor.rgb = hsv2rgb(
+                vec3(uv.x*0.5 + 0.5, 1., 1.)
+                );
+            fragColor.a = 1;
             break;
     }
 
