@@ -19,6 +19,7 @@ layout (binding = 0) uniform sampler2D bTexture;
 #endif
 
 layout (location = 21) uniform vec3 sunDir;
+layout (location = 22) uniform vec3 planetRot;
 
 #include globals/Fragment3DInputs.glsl
 #include globals/Fragment3DOutputs.glsl
@@ -252,6 +253,21 @@ vec3 atmosphericScattering(
         ) * sunIntensity + sceneColor * opacity * (1.0 - brightness);
 }
 
+vec3 rotate(vec3 v, float a, vec3 axis)
+{
+    float s = sin(a);
+    float c = cos(a);
+    float oc = 1.0 - c;
+
+    mat3 rot = mat3(
+        oc * axis.x * axis.x + c, oc * axis.x * axis.y - axis.z * s, oc * axis.z * axis.x + axis.y * s,
+        oc * axis.x * axis.y + axis.z * s, oc * axis.y * axis.y + c, oc * axis.y * axis.z - axis.x * s,
+        oc * axis.z * axis.x - axis.y * s, oc * axis.y * axis.z + axis.x * s, oc * axis.z * axis.z + c
+    );
+
+    return rot * v;
+}
+
 void main()
 {
     // color = getSkyColor(uv);
@@ -276,7 +292,13 @@ void main()
     vec3 lightIntensity = sunColor * 40.0;
     
     
-    vec3 starsColor = getStars(rayDir, 40.0, 0.05, 0.5, 0.3);
+    vec3 starsDir = rayDir;
+
+    // rotate the stars direction based on the planet rotation
+    // very bad way to do this >:(
+    // starsDir = rotate(starsDir, planetRot.x, vec3(1, 0, 0));
+
+    vec3 starsColor = getStars(starsDir, 40.0, 0.05, 0.5, 0.3);
     vec3 sceneColor = starsColor;
     
     vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, sunDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS);
@@ -294,7 +316,7 @@ void main()
     float angle = dot(rayDir, sunDir);
     if (angle > 0.999)
     {
-        fragColor.rgb = vec3(1, 0, 1);
+        // fragColor.rgb = vec3(1, 0, 1);
     }
     
 
