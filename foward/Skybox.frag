@@ -123,9 +123,9 @@ vec3 getStars(vec3 viewDir, float scale, float starSize, float starDensity, floa
 }
 
 
-#define IN_STEPS 32
+#define IN_STEPS 16
 // at least 2 steps (or we get very wrong results) but 3 is better
-#define OUT_STEPS 3
+#define OUT_STEPS 2
 
 
 // Constants from https://www.shadertoy.com/view/wlBXWK
