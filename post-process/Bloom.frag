@@ -39,6 +39,30 @@ vec3 blur(sampler2D screenTexture, vec2 texCoords)
     vec2 tex_offset = 1.0f / textureSize(screenTexture, 0);
     vec3 result = texture(screenTexture, texCoords).rgb * weights[0];
 
+
+
+
+
+
+
+
+
+
+    for(int i = 1; i < radius; i+= 5)
+    {
+        vec2 p = vec2(tex_offset.x*i, tex_offset.y * i) * (pass == 1 ? vec2(-1) : vec2(1));
+
+        // p = mix(p, tex_offset*vec2(150.0), 1.0 / float(i));
+
+        // Take into account pixels above
+        result += texture(screenTexture, texCoords + p).rgb * weights[i];
+        // Take into account pixels below
+        result += texture(screenTexture, texCoords - p).rgb * weights[i];
+    }
+    return result;
+
+
+
     // Calculate horizontal blur
     // if(horizontal)
     if(pass == 1)
