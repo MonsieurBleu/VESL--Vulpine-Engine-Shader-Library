@@ -20,6 +20,10 @@ layout (binding = 0) uniform sampler2D bTexture;
 
 layout (location = 21) uniform vec3 sunDir;
 layout (location = 22) uniform vec3 planetRot;
+layout (location = 23) uniform vec3 moonPos;
+layout (location = 24) uniform vec3 planetPos;
+layout (location = 25) uniform vec3 moonRot;
+layout (location = 26) uniform mat3 tangentSpaceMatrix;
 
 #include globals/Fragment3DInputs.glsl
 #include globals/Fragment3DOutputs.glsl
@@ -90,7 +94,7 @@ vec3 rgb(float r, float g, float b) {
 }
 
 // generate star function
-vec3 getStars(vec3 viewDir, float scale, float starSize, float starDensity, float maxSaturation)
+vec3 getStars(vec3 viewDir, float scale, float starSize, float starDensity, float maxSaturation, out float brightness)
 {
     // Convert viewDir to spherical coordinates
     float longitude = atan(viewDir.y, viewDir.x);
@@ -118,6 +122,8 @@ vec3 getStars(vec3 viewDir, float scale, float starSize, float starDensity, floa
     
     // Apply star brightness factor to get the final star color
     col *= starFactor;
+
+    brightness = 1.0 - clamp(cell * 200, 0.00, 1.0);
 
     return col;
 }
@@ -152,7 +158,8 @@ vec3 atmosphericScattering(
     vec3 lightDir,
     vec3 sunIntensity,
     vec3 sceneColor,
-    float maxDist
+    float maxDist,
+    out float brightness
 )
 {
     float a = dot(viewDir, viewDir);
@@ -239,20 +246,19 @@ vec3 atmosphericScattering(
         rayPosIn += stepSizeIn;
     }
 
-    // return vec3(totalRay);
-
     vec3 opacity = exp(-(MIE_BETA * opticalDepthIn.y + 
                          RAY_BETA * opticalDepthIn.x + 
                          ABSORPTION_BETA * opticalDepthIn.z));
 
-    float brightness = clamp(length(RAY_BETA * totalRay) * 10.0, 0.0, 1.0);
-    
-
-    return (
+    vec3 scatteredLight = (
         phaseRay * RAY_BETA * totalRay + 
         phaseMie * MIE_BETA * totalMie + 
         opticalDepthIn.x * AMBIENT_BETA
-        ) * sunIntensity + sceneColor * opacity * (1.0 - brightness);
+        );
+
+    brightness = dot(scatteredLight, vec3(0.2126, 0.7152, 0.0722)); 
+
+    return scatteredLight * sunIntensity + sceneColor * opacity;
 }
 
 vec3 rotate(vec3 v, float a, vec3 axis)
@@ -270,6 +276,128 @@ vec3 rotate(vec3 v, float a, vec3 axis)
     return rot * v;
 }
 
+struct rayTraceOut {
+    float t;
+    vec3 intersectPoint;
+    vec3 normal;
+    vec2 uv;
+};
+
+rayTraceOut sphereIntersect(vec3 origin, vec3 direction, vec3 center, float radius)
+{
+    vec3 v = origin - center;
+
+    float a = dot(direction, direction);
+    float b = 2.0 * dot(direction, v);
+    float c = dot(v, v) - radius * radius;
+
+    rayTraceOut empty;
+    empty.t = -1.0;
+    float delta = b * b - 4.0 * a * c;
+    if (delta < 0.0)
+    {
+        return empty;
+        // return vec3(0);
+    }
+
+    float t1 = (-b + sqrt(delta)) / (2.0 * a);
+    float t2 = (-b - sqrt(delta)) / (2.0 * a);
+
+    if (t1 < 0.0 && t2 < 0.0)
+    {
+        return empty;
+        // return vec3(0);
+    }
+
+    float t;
+    
+    if (t1 < 0.0001)
+    {
+        t = t2;
+    }
+    else if (t2 < 0.0001)
+    {
+        t = t1;
+    }
+    else
+    {
+        t = min(t1, t2);
+    }
+
+    rayTraceOut rslt;
+    rslt.t = t;
+    rslt.intersectPoint = origin + direction * t;
+    rslt.normal = normalize(rslt.intersectPoint - center);
+    
+    // compute uv
+    vec3 n = rslt.normal;
+    float phi = atan(n.z, n.x);
+    float theta = acos(n.y);
+    rslt.uv = vec2(1.0 - (phi + 3.14159265359) / (2.0 * 3.14159265359), theta / 3.14159265359);
+
+
+    return rslt;
+    // return origin + direction * t;
+}
+
+// should probably get some other coherent noise function
+vec2 random2(vec2 st){
+    st = vec2( dot(st,vec2(127.1,311.7)),
+              dot(st,vec2(269.5,183.3)) );
+    return -1.0 + 2.0*fract(sin(st)*43758.5453123);
+}
+
+// Gradient Noise by Inigo Quilez - iq/2013
+// https://www.shadertoy.com/view/XdXGW8
+float noise(vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    vec2 u = f*f*(3.0-2.0*f);
+
+    return (mix( mix( dot( random2(i + vec2(0.0,0.0) ), f - vec2(0.0,0.0) ),
+                     dot( random2(i + vec2(1.0,0.0) ), f - vec2(1.0,0.0) ), u.x),
+                mix( dot( random2(i + vec2(0.0,1.0) ), f - vec2(0.0,1.0) ),
+                     dot( random2(i + vec2(1.0,1.0) ), f - vec2(1.0,1.0) ), u.x), u.y)) * .5 + .5;
+}
+
+#define MOON_RADIUS 12737.1e3
+#define MOON_DISTANCE 384400e3
+
+void getMoonColor(vec3 origin, vec3 direction, inout vec3 color, float opacity)
+{
+    vec3 sunPos = -planetPos.xyz;
+
+    vec3 tangentSpaceDir = tangentSpaceMatrix * direction.xyz;
+
+
+    rayTraceOut moonIntersect = sphereIntersect(origin, tangentSpaceDir, moonPos, MOON_RADIUS);
+    if (moonIntersect.t > 0.0)
+    {
+        // shading
+        vec3 moonNormal = moonIntersect.normal;
+        vec3 moonToSun = normalize(sunPos - moonPos);
+        float moonAngle = dot(moonToSun, moonNormal);
+
+
+        float moonIntensity = max(moonAngle, 0.0);
+        vec3 colorBlack = vec3(0.0);
+
+        float n1 = noise((moonIntersect.uv + vec2(-.2, .10)) * vec2(5.0, 4.0)) * 1.4;
+        float n2 = noise((moonIntersect.uv + vec2(-.7, -.9)) * vec2(5., 4.)) * -0.6;
+        float n3 = noise((moonIntersect.uv + vec2(.1, .5)) * vec2(10.0, 5.0)) * 0.2;
+        float n4 = noise((moonIntersect.uv.yx + vec2(.2, -.9)) * vec2(5.0, 20.0)) * -0.1;
+
+        float n = min(n1 + n2 + n3 + n4, 1.0);
+        vec3 colMoon = vec3(n);
+
+        // colMoon = vec3(moonIntersect.uv, 1.0);
+
+        vec3 moonColor = mix(colorBlack, colMoon, moonIntensity);
+        color = mix(color, moonColor, max(opacity, 0.15));
+    }
+}
+
 void main()
 {
     // color = getSkyColor(uv);
@@ -277,7 +405,7 @@ void main()
 
     // color = pow(vec3(1.0) - exp(-color*exposure), vec3(1.0/gamma));
 
-    vec3 planetPos = vec3(0, PLANET_RADIUS, 0);
+    vec3 planetPos = vec3(0, PLANET_RADIUS + 100, 0);
 
     
     vec2 ndc = (gl_FragCoord.xy / _iResolution) * 2.0 - 1.0;
@@ -300,13 +428,22 @@ void main()
     // very bad way to do this >:(
     // starsDir = rotate(starsDir, planetRot.x, vec3(1, 0, 0));
 
-    vec3 starsColor = getStars(starsDir, 40.0, 0.05, 0.5, 0.3);
-    vec3 sceneColor = starsColor;
+    float starBrightness;
     
-    vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, sunDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS);
-    vec3 finalColor = rayleighScatteringColor;
+    vec3 sceneColor = vec3(0);
+    
+    float brightness;
+    vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, sunDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS, brightness);
+
+    brightness *= 255.0;
+    brightness = clamp(brightness, 0.0, 1.0);
+
+    vec3 starsColor = getStars(starsDir, 40.0, 0.05, 0.5, 0.3, starBrightness);
+    vec3 finalColor = mix(rayleighScatteringColor, starsColor + rayleighScatteringColor, 1.0 - brightness);
 
     finalColor = 1.0 - exp(-finalColor);
+
+    getMoonColor(planetPos, rayDir, finalColor, 1.0 - brightness);
 
     fragColor.rgb = finalColor;
     // fragColor.rgb = vec3(gl_FragCoord.xy / _iResolution, 0.0);
