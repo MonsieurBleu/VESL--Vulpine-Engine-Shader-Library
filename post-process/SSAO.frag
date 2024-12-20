@@ -46,18 +46,21 @@ vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
 // tile noise texture over screen, based on screen dimensions divided by noise size
 vec2 noiseScale = vec2(float(iResolution.x)/4.0, float(iResolution.y)/4.0);
 
-int kernelSize = 16; // 64
-float radius = 0.5; // 5.0
-float bias = 0.0; // 0.5
+int kernelSize = 32; // 64
+float radius = 0.3; // 5.0
+float bias = 0.01; // 0.5
 
 void main()
 {
     vec3 fragPos = calculateViewPosition(uvScreen, texture(bDepth, uvScreen).x);
 
     vec3 fragColor = texture(bColor, uvScreen).rgb;
+    
+    vec3 tnormal = texture(gNormal, uvScreen).rgb;
+    vec3 normal = tnormal * 2.0 - 1.0;
 
-    vec3 normal = texture(gNormal, uvScreen).rgb * 2.0 - 1.0;
     if(normal.x >= 1.0 && normal.y >= 1.0 && normal.y >= 1.0) discard;
+
     normal = normalize(normal);
 
     vec3 randomVec = texture(texNoise, uvScreen * noiseScale).xyz * 2.0 - 1.0;

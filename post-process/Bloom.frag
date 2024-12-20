@@ -14,7 +14,7 @@ out vec3 fragColor;
 #include functions/HSV.glsl
 
 // How far from the center to take samples from the fragment you are currently on
-const int radius = 70;
+const int radius = 60;
 // Keep it between 1.0f and 2.0f (the higher this is the further the blur reaches)
 float spreadBlur = 2.0;
 float weights[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
@@ -48,7 +48,7 @@ vec3 blur(sampler2D screenTexture, vec2 texCoords)
 
 
 
-    for(int i = 1; i < radius; i+= 5)
+    for(int i = 1; i < radius; i+= 3)
     {
         vec2 p = vec2(tex_offset.x*i, tex_offset.y * i) * (pass == 1 ? vec2(-1) : vec2(1));
 
@@ -59,20 +59,34 @@ vec3 blur(sampler2D screenTexture, vec2 texCoords)
         // Take into account pixels below
         result += texture(screenTexture, texCoords - p).rgb * weights[i];
     }
+
+    for(int i = 1; i < radius; i+= 3)
+    {
+        vec2 p = 1.0 * vec2(tex_offset.x*i, tex_offset.y * -i) * (pass == 1 ? vec2(-1) : vec2(1));
+
+        // p = mix(p, tex_offset*vec2(150.0), 1.0 / float(i));
+
+        // Take into account pixels above
+        result += texture(screenTexture, texCoords + p).rgb * weights[i];
+        // Take into account pixels below
+        result += texture(screenTexture, texCoords - p).rgb * weights[i];
+    }
+
     return result;
 
 
 
     // Calculate horizontal blur
     // if(horizontal)
+    float downscale = 0.01;
     if(pass == 1)
     {
         for(int i = 1; i < radius; i+= 5)
         {
             // Take into account pixels to the right
-            result += texture(screenTexture, texCoords + vec2(tex_offset.x * i, 0.0)).rgb * weights[i];
+            result += texture(screenTexture, texCoords + downscale* vec2(tex_offset.x * i, 0.0)).rgb * weights[i];
             // Take into account pixels on the left
-            result += texture(screenTexture, texCoords - vec2(tex_offset.x * i, 0.0)).rgb * weights[i];
+            result += texture(screenTexture, texCoords - downscale * vec2(tex_offset.x * i, 0.0)).rgb * weights[i];
         }
     }
     // Calculate vertical blur
@@ -81,9 +95,9 @@ vec3 blur(sampler2D screenTexture, vec2 texCoords)
         for(int i = 1; i < radius; i+= 5)
         {
             // Take into account pixels above
-            result += texture(screenTexture, texCoords + vec2(0.0, tex_offset.y * i)).rgb * weights[i];
+            result += texture(screenTexture, texCoords + downscale * vec2(0.0, tex_offset.y * i)).rgb * weights[i];
             // Take into account pixels below
-            result += texture(screenTexture, texCoords - vec2(0.0, tex_offset.y * i)).rgb * weights[i];
+            result += texture(screenTexture, texCoords - downscale * vec2(0.0, tex_offset.y * i)).rgb * weights[i];
         }
     }
     

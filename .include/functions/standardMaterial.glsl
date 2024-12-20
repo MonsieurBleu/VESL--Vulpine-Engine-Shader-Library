@@ -6,6 +6,8 @@ float mRoughness2 = 0.0;
 float mMetallic = 0.0;
 float mEmmisive = 0.0;
 
+float sunLightMult = 1.0;
+
 // vec3 ambientLight = vec3(0.2);
 vec3 normalComposed = vec3(0.0);
 vec3 viewDir = vec3(0.0);
@@ -208,7 +210,7 @@ vec3 getStandardEmmisive(vec3 fcolor)
 
     // vec3 baseEmmissive = pow(fcolor, vec3(1.5));
 
-    vec3 baseEmmissive = pow(fcolor, vec3(2.0) + rgb2v(fcolor)*50.0);
+    vec3 baseEmmissive = pow(fcolor, vec3(2.0) + rgb2v(fcolor)*20.f*(0.03 + 1-mMetallic))*(0.01 + 1-mMetallic)*0.05;
 
 
     vec3 finalEmmisive = baseEmmissive * (1.0 + 2.0 * mEmmisive);

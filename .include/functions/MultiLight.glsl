@@ -91,6 +91,7 @@ void getLightDirectionnal(
 {
     lightResult = getLighting(direction, color);
     factor = shadows ? intensity : intensity*getShadow(bShadowMaps[mapID], matrix, dot(normalComposed, direction));
+    sunLightMult *= factor ;
 }
 
 void getLightPoint(
@@ -103,6 +104,7 @@ void getLightPoint(
 {
     float maxDist = max(radius, 0.0001);
     float distFactor = max(maxDist - distance(lcalcPosition, lPosition), 0.) / maxDist;
+    distFactor = 0.f;
     factor = distFactor * distFactor * intensity;
     lightResult = getLighting(normalize(lcalcPosition - lPosition), color);
 }

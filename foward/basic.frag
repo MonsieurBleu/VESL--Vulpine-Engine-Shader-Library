@@ -23,5 +23,6 @@ void main() {
     fragColor.rgb = bColor;
     fragEmmisive = vec3(0);
 
-    fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb) * 0.5 + 0.5;
+    // fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb) * 0.5 + 0.5;
+    fragNormal = vec3(0);
 }

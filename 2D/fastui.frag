@@ -12,7 +12,7 @@ in flat int type;
 in float aspectRatio;
 in float scale;
 
-const float SMOOTHSTEP_BORDER = 0.01;
+const float SMOOTHSTEP_BORDER = 0.001;
 // const float SMOOTHSTEP_BORDER_SQUARED = SMOOTHSTEP_BORDER*SMOOTHSTEP_BORDER;
 
 float borderSize = 0.05;
@@ -55,17 +55,35 @@ void main() {
     float border = 0.;
     vec2 uvAR = uv;
     arCorrection = aspectRatio > 1. ? vec2(aspectRatio, 1.0) : vec2(1.0, 1.0 / aspectRatio);
-    // borderSize /= pow(scale, 1.75);
     // borderSize *= 0.025;
-    borderSize *= 0.f;
+    // borderSize *= 0.f;
     // uvAR /= scale;
+
+
+    borderSize = 0.005;
+    // borderSize /= pow(scale, 1.75);
+
+    // borderSize = borderSize / (scale);
+
+    // vec2 size = 
+
+    borderSize = borderSize / (scale);
+    // borderSize *= aspectRatio > 1. ? 0.1 * aspectRatio / scale : scale ;
+
+    // borderSize = max(borderSize, 0.01);
+    // borderSize = borderSize / max(arCorrection.y, arCorrection.x);
+    // borderSize = borderSize * (min(arCorrection.y, arCorrection.x)/max(arCorrection.y, arCorrection.x));
+
+    // arCorrection = vec2(1);
 
     switch(type) {
         case 0:
-            borderSize /= scale;
-            borderSize *= 0.1;
+        case 3:
+            // borderSize /= scale;
+            // borderSize *= 0.1;
             border = drawSquare(uvAR);
             break;
+
         case 2:
             border = drawCircle(uvAR);
             break;
@@ -73,7 +91,12 @@ void main() {
         default :
             border = drawSquareRounded(
                 // min(1.0, 0.05 / scale), 
-                0.03/scale,
+                // 0.02/scale
+                // 0.03 * max(arCorrection.x, arCorrection.y)
+                // 30 / (max(arCorrection.x, arCorrection.y) / scale)
+                0.75
+                ,
+
                 uvAR);
             break;
     }
@@ -90,7 +113,7 @@ void main() {
             fragColor.rgb = hsv2rgb(
                 vec3(uv.x*0.5 + 0.5, 1., 1.)
                 );
-            fragColor.a = 1;
+            fragColor.a *= 2;
             break;
     }
 
@@ -118,5 +141,12 @@ void main() {
 
     // fragColor.a = border;
 
+    // fragColor.rgb = vec3(0.0, arCorrection.x, arCorrection.y)*0.05;
+    // fragColor.rgb = vec3(0.0, scale / arCorrection.y, 0.0);
+    
+    fragColor = mix(fragColor, fragColor * vec4(vec3(1.0), 0.4), border);
+
+
     if(fragColor.a == 0.f) discard;
+    // fragColor.a = 1;
 }
