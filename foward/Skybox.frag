@@ -18,7 +18,7 @@ layout (location = 20, bindless_sampler) uniform sampler2D bTexture;
 layout (binding = 0) uniform sampler2D bTexture;
 #endif
 
-
+layout (location = 32) uniform int skyboxType;
 
 #include globals/Fragment3DInputs.glsl
 #include globals/Fragment3DOutputs.glsl
@@ -35,9 +35,23 @@ in vec3 viewPos;
 
 void main()
 {
-    getSkyColors(normalize(position), fragColor.rgb, fragEmmisive.rgb);
+    vec3 dir = -normalize(normal);
 
-    fragColor.a = 1.0;
+    switch(skyboxType)
+    {
+        case 1  : fragColor.rgb = vec3( 53,  49,  48)/255.;
+        fragNormal = vec3(1);
+        break;
 
-    fragNormal = vec3(1);
+        default : getSkyColors(dir, fragColor.rgb, fragEmmisive.rgb);
+        fragNormal = vec3(0);
+        break;
+    }
+
+    // fragColor.rgb = getAmbientInteriorColor(dir);
+
+    
+
+
+    // fragColor.a = 1.0;
 }

@@ -3,7 +3,7 @@
 layout (location = 0) uniform ivec2 iResolution;
 layout (location = 1) uniform float iTime;
 layout (location = 2) uniform mat4 MVP;
-layout (location = 9) uniform mat4 _cameraProjectionMatrix; 
+layout (location = 4) uniform mat4 _cameraProjectionMatrix; 
 
 layout (location = 0) in vec2 vertexPosition;
 

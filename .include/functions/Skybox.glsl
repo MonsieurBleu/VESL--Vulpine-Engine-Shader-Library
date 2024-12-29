@@ -1,18 +1,29 @@
 #ifndef FNCT_SKYBOX_GLSL
 #define FNCT_SKYBOX_GLSL
 
+#include functions/Noise.glsl
+
 #ifdef CUBEMAP_SKYBOX
     layout (binding = 4) uniform samplerCube bSkyTexture; 
 #else
     layout (binding = 4) uniform sampler2D bSkyTexture;
 #endif
 
-layout (location = 17) uniform vec3 sunDir;
+
+#ifdef SUN_DIR_NON_UNIFORM
+    vec3 sunDir;
+    vec3 moonPos;
+    vec3 planetPos = vec3(0);
+    mat3 planetTangentSpace = mat3(1);
+#else
+    layout (location = 17) uniform vec3 sunDir;
+    layout (location = 18) uniform vec3 moonPos;
+    layout (location = 19) uniform vec3 planetPos;
+    layout (location = 9) uniform mat3 planetTangentSpace;
+#endif
+
 // layout (location = 22) uniform vec3 planetRot;
-layout (location = 18) uniform vec3 moonPos;
-layout (location = 19) uniform vec3 planetPos;
 // layout (location = 25) uniform vec3 moonRot;
-layout (location = 20) uniform mat3 tangentSpaceMatrix;
 
 /***
 * Function for generating a stary sky with voronoi gradientNoise
@@ -249,10 +260,18 @@ void getMoonColor(vec3 origin, vec3 direction, inout vec3 color, float opacity)
 {
     vec3 sunPos = -planetPos.xyz;
 
-    vec3 tangentSpaceDir = tangentSpaceMatrix * direction.xyz;
+    vec3 tangentSpaceDir = planetTangentSpace * direction.xyz;
 
 
     rayTraceOut moonIntersect = sphereIntersect(origin, tangentSpaceDir, moonPos, MOON_RADIUS);
+
+    // moonIntersect.uv = moonIntersect.uv.yx;
+    // moonIntersect.uv = vec2(0);
+    // moonIntersect.intersectPoint *= vec3(1, 1, 1);
+    moonIntersect.normal *= vec3(1, -1, 1);
+
+    // color = vec3(moonIntersect.t * 1e-3);
+    // return;
 
     if (moonIntersect.t > 0.0)
     {
@@ -263,23 +282,42 @@ void getMoonColor(vec3 origin, vec3 direction, inout vec3 color, float opacity)
 
 
         float moonIntensity = max(moonAngle, 0.0);
+        // moonIntensity = 1.f;
         vec3 colorBlack = vec3(0.0);
 
-        float n1 = gradientNoise((moonIntersect.uv + vec2(-.2, .10)) * vec2(5.0, 4.0)) * 1.4;
-        float n2 = gradientNoise((moonIntersect.uv + vec2(-.7, -.9)) * vec2(5., 4.)) * -0.6;
-        float n3 = gradientNoise((moonIntersect.uv + vec2(.1, .5)) * vec2(10.0, 5.0)) * 0.2;
-        float n4 = gradientNoise((moonIntersect.uv.yx + vec2(.2, -.9)) * vec2(5.0, 20.0)) * -0.1;
+        moonIntersect.uv *= vec2(1, -1);
 
-        float n = min(n1 + n2 + n3 + n4, 1.0);
+        float n1 = gradientNoise((moonIntersect.uv + vec2(-.2, .10)) * 1 * vec2(5.0, 4.0)) * 1.4;
+        float n2 = gradientNoise((moonIntersect.uv + vec2(-.7, -.9)) * 5 * vec2(5., 4.)) * -0.6;
+        float n3 = gradientNoise((moonIntersect.uv + vec2(.1, .5))   * 30 * vec2(10.0, 5.0)) * 0.2;
+        float n4 = gradientNoise((moonIntersect.uv.yx + vec2(.2, -.2)) * 1 * vec2(5.0, 20.0));
+
+        float n = min(n1 + n2 + n3, 1.0);
+        float n_ = min(n1 + n4, 1.0);
 
         // float n = rand3to1(vec3(moonIntersect.uv, 1));
 
-        vec3 colMoon = vec3(n);
+        vec3 colMoon = vec3(1);
 
-        // colMoon = vec3(moonIntersect.uv, 1.0);
+        colMoon = rgb2hsv(colMoon);
+
+        colMoon.r = 0.2;
+        colMoon.b = n;
+        colMoon.g = n4*0.5;
+
+        colMoon = hsv2rgb(colMoon);
+
+
+
+
+        // vec3 colMoon = vec3(n1, n2, n3);
+
+        // colMoon = vec3(moonIntersect.normal.xz, 0.f);
 
         vec3 moonColor = mix(colorBlack, colMoon, moonIntensity)*vec3(1.0, 0.9, 0.8)*1.5;
         color = mix(color, moonColor, max(opacity, 0.15));
+
+        // color = vec3(0);
     }
 
 }
@@ -363,5 +401,54 @@ vec3 getSkyColor(vec3 v)
 
     // return c;
 }
+
+void addGradient(inout vec3 frag, vec3 ray, vec3 gcolor, vec3 gcenter, float attenuation)
+{
+    vec3 gdir = normalize(gcenter);
+    float a = clamp((dot(gdir, ray)), 0, 1);
+
+    // a = pow(a, attenuation);
+
+    frag = mix(gcolor, frag, smoothstep(0.0, 1.0/attenuation, 1.0 - a));
+}
+
+
+vec3 getAmbientInteriorColor(vec3 dir)
+{
+    vec2 uvSky = vec2(
+        0.5 + atan(-dir.z, dir.x)/(2.0*PI), 
+        -dir.y*0.5 + 0.5
+    );
+    return pow(texture(bSkyTexture, uvSky).rgb, vec3(1.0))*0.25;
+
+    const vec3 maroon = hsv2rgb(vec3(0.05, 1.0, 0.15));
+
+    const vec3 darkMaroon = vec3(0.25, 0.2, 0.1)*0.2;
+    vec3 c = darkMaroon;
+    const vec3 green = hsv2rgb(vec3(0.35, 0.5, 0.06));
+    const vec3 grey = hsv2rgb(vec3(0.6, 0.3, 0.075));
+
+    vec3 cell_center;
+    float scale = 10.;
+    vec3 voronoi1 = voronoi3d(dir*scale, cell_center);
+    vec3 voronoi2 = voronoi3d(1 + dir*scale*1.0, cell_center);
+
+    voronoi1 = smoothstep(vec3(0.), vec3(0.9), voronoi1);
+    voronoi2 = smoothstep(vec3(0.), vec3(1.0), voronoi2);
+
+    voronoi1 = clamp(voronoi1, vec3(0), vec3(1));
+    voronoi2 = clamp(voronoi2, vec3(0), vec3(1));
+    
+    // c = voronoi.zzz;
+
+    c = mix(darkMaroon, green, voronoi1.x * max(1.0-abs(dir.y), 0.f) * 2.0);
+    c = mix(c, maroon, pow(voronoi2.x, 5.0));
+    c = mix(c, grey, pow(voronoi1.y * voronoi2.y, 1.0) * max(dir.y, 0.f));
+
+
+    return c;
+}
+
+
 
 #endif

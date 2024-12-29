@@ -6,7 +6,7 @@ float mRoughness2 = 0.0;
 float mMetallic = 0.0;
 float mEmmisive = 0.0;
 
-float sunLightMult = 1.0;
+float sunLightMult = 0.0;
 
 // vec3 ambientLight = vec3(0.2);
 vec3 normalComposed = vec3(0.0);
@@ -17,6 +17,7 @@ float nDotV = 0.0;
 struct Material
 {
     vec3 result;
+    vec3 reflect;
 };
 
 #ifdef USE_PBR
@@ -63,6 +64,7 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
     
     
     Material result;
+    result.reflect = fresnelSchlick;
     #ifdef USE_TOON_SHADING
         // float tmp1 = (1-mRoughness)*0.25 
         //     *pow(fresnelSchlick.x, 0.5)
@@ -80,7 +82,6 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
         result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
     #endif
 
-    
 
     
 
@@ -210,10 +211,23 @@ vec3 getStandardEmmisive(vec3 fcolor)
 
     // vec3 baseEmmissive = pow(fcolor, vec3(1.5));
 
-    vec3 baseEmmissive = pow(fcolor, vec3(2.0) + rgb2v(fcolor)*20.f*(0.03 + 1-mMetallic))*(0.01 + 1-mMetallic)*0.05;
+    float im = 1.0-mMetallic;
+    // vec3 baseEmmissive = pow(fcolor, vec3(2.0) + rgb2v(fcolor)*20.f*(0.03 + im));
+    // baseEmmissive *= 0.025*(0.01 + im);
+
+    float lum = rgb2v(fcolor);
+    float eFactor = 0.01 * (0.001 + im);
+    float eExponent = 2.0 + lum*1.0;
+    // eFactor += mMetallic * 0.5;
+    vec3 baseEmmissive = pow(fcolor, vec3(eExponent)) * eFactor;
 
 
-    vec3 finalEmmisive = baseEmmissive * (1.0 + 2.0 * mEmmisive);
+
+    // vec3 finalEmmisive = baseEmmissive * (1.0 + 2.0 * mEmmisive);
+    // vec3 finalEmmisive = baseEmmissive * (1.0 + (mEmmisive * 1));
+    vec3 finalEmmisive = vec3(mEmmisive) * color * 0.1;
+
+    finalEmmisive = mix(baseEmmissive, finalEmmisive, mEmmisive);
 
     return finalEmmisive;
 }

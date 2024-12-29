@@ -3,6 +3,7 @@
 #include uniform/Base2D.glsl
 #include uniform/Model3D.glsl
 #include functions/HSV.glsl
+#include globals/Constants.glsl
 
 layout(location = 0) out vec4 fragColor;
 
@@ -18,6 +19,11 @@ const float SMOOTHSTEP_BORDER = 0.001;
 float borderSize = 0.05;
 
 vec2 arCorrection = vec2(0);
+
+#define SKYBOX_REFLECTION
+#define SUN_DIR_NON_UNIFORM
+#include functions/Skybox.glsl
+
 
 float drawCircle(vec2 inUv) {
     float l = length(inUv);
@@ -85,6 +91,9 @@ void main() {
             break;
 
         case 2:
+        case 5 : 
+            uvAR *= arCorrection;
+
             border = drawCircle(uvAR);
             break;
 
@@ -115,6 +124,58 @@ void main() {
                 );
             fragColor.a *= 2;
             break;
+        
+        case 5 : 
+
+            uvAR.x *= -1;
+
+            uvAR.y += 0.5;
+
+            float a = PI*-0.275f;
+            uvAR += vec2(
+                uvAR.x*cos(a) - uvAR.y*sin(a),
+                uvAR.x*sin(a) + uvAR.y*cos(a)
+            );
+
+            /**** TODO : adjust ****/
+            if(uvAR.x > 0.0)
+            {
+                // uvAR -= -0.2*uvAR.x*(distance(uvAR.x, 0.0));
+            }
+            else
+            {
+                // uvAR -= 1.0*uvAR.x*(distance(uvAR.x, 0.0));
+            }
+
+            uvAR.y *= pow(abs(uvAR.y), 0.2);
+            // uvAR.x /= 10.f;
+
+            sunDir = normalize(vec3(uvAR.x, uvAR.y*2.0, -5.0));
+            fragColor.rgb = getSkyColor(normalize(vec3(0, 0.3, 1)));
+            
+
+            // moonPos = normalize(vec3(-uvAR.x, -uvAR.y, 1));
+            // moonPos *= 1e6;
+
+            // moonPos.y *= -1;
+            // fragColor.rgb = getAtmopshereColor(normalize(vec3(0, 0.3, 1)));
+
+            fragColor.rgb += pow(max(-sunDir.y, 0.), 0.5) * getStars(
+                -sunDir, 
+                0.3, 
+                50, 
+                0.5);
+
+            // {
+            //     sunDir = sunDir = normalize(vec3(uvAR.x, -uvAR.y, 1));
+            //     fragColor.rgb += pow(getSkyColor(normalize(vec3(0, 0.3, 1))), vec3(5.0));
+            // }
+                // fragColor.rgb = pow(fragColor.rgb, vec3(0.4));
+
+
+            fragColor.rgb = pow(fragColor.rgb, vec3(0.75));
+            fragColor.a   *= 5.0;
+            break;
     }
 
 
@@ -143,6 +204,8 @@ void main() {
 
     // fragColor.rgb = vec3(0.0, arCorrection.x, arCorrection.y)*0.05;
     // fragColor.rgb = vec3(0.0, scale / arCorrection.y, 0.0);
+
+    // fragColor.rgb = getAtmopshereColor(normalize(vec3(1.0, uvAR.y, uvAR.x)));
     
     fragColor = mix(fragColor, fragColor * vec4(vec3(1.0), 0.4), border);
 
