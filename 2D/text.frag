@@ -32,10 +32,10 @@ void main()
     // float opacity = smoothstep(-0.5, 0.25, pxDist);
     // float opacity = smoothstep(-pxRange, pxRange*2, pxDist);
 
-    float outer = smoothstep(0.0, 0.3, dist);
-    float inner = smoothstep(0.0, 0.5, dist);
+    float outer = smoothstep(-0.01, 0.15, dist);
+    float inner = smoothstep(0.0, 1.0, dist);
 
-    bodyColor = mix(outlineColor, bodyColor, pow(inner, 1.0));
+    // bodyColor = mix(outlineColor, bodyColor, pow(inner, 1.0));
 
     float opacity = outer;
 

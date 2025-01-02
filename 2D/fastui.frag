@@ -13,7 +13,7 @@ in flat int type;
 in float aspectRatio;
 in float scale;
 
-const float SMOOTHSTEP_BORDER = 0.001;
+float SMOOTHSTEP_BORDER = 0.01;
 // const float SMOOTHSTEP_BORDER_SQUARED = SMOOTHSTEP_BORDER*SMOOTHSTEP_BORDER;
 
 float borderSize = 0.05;
@@ -65,6 +65,8 @@ void main() {
     // borderSize *= 0.f;
     // uvAR /= scale;
 
+    // SMOOTHSTEP_BORDER /= scale;
+
 
     borderSize = 0.005;
     // borderSize /= pow(scale, 1.75);
@@ -94,7 +96,7 @@ void main() {
         case 5 : 
             uvAR *= arCorrection;
 
-            border = drawCircle(uvAR);
+            border = drawCircle(uvAR)*0.00001;
             break;
 
         default :

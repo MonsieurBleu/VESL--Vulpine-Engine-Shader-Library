@@ -39,13 +39,38 @@ void main()
 
     switch(skyboxType)
     {
-        case 1  : fragColor.rgb = vec3( 53,  49,  48)/255.;
+        case 1 : 
+            int it = 16;
+            for(int i = 0; i < it; i++)
+            {
+                vec3 r = dir + rand3to3(vec3(i) * 0.1 + abs(dir))*0.05;
+                fragColor.rgb += getAmbientInteriorColor(normalize(r));
+            }
+            fragColor.rgb /= it;
+            fragNormal = vec3(0);
+        break;
+
+        case 2  : fragColor.rgb = vec3(53,  49,  48)/255.;
+        fragNormal = vec3(1);
+        break;
+
+        case 3  : fragColor.rgb = vec3(242, 234,  222)/255.;
+        fragNormal = vec3(1);
+        break;
+
+        case 4  : fragColor.rgb = vec3(100, 175, 200)/255.;
+        fragNormal = vec3(1);
+        break;
+
+        case 5  : fragColor.rgb = vec3(0, 200, 0)/255.;
         fragNormal = vec3(1);
         break;
 
         default : getSkyColors(dir, fragColor.rgb, fragEmmisive.rgb);
         fragNormal = vec3(0);
         break;
+
+
     }
 
     // fragColor.rgb = getAmbientInteriorColor(dir);

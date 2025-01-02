@@ -70,14 +70,14 @@ vec3 getSkyboxReflection(vec3 v, vec3 n)
             
             vec3 c = clamp(getAtmopshereColor(-reflectDir), vec3(0), vec3(1));
 
-            vec3 c2 = getAmbientInteriorColor(-reflectDir);
+            vec3 c2 = getAmbientInteriorColor(-reflectDir)*0.5;
 
             
 
             // c2 = vec3(0.25, 0.2, 0.1)*0.5;
             // sunLightMult = 0;
 
-            vec3 finalReflection = mix(max(c, c2), c2, 1. - pow(sunLightMult, 10.0));
+            vec3 finalReflection = mix(max(c, c2), c2, 1. - pow(sunLightMult, 0.5));
 
             // finalReflection = finalReflection * (0.5 + 0.5*(1.0 - mRoughness));
 
