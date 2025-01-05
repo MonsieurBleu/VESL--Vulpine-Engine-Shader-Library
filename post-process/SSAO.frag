@@ -3,10 +3,10 @@
 layout (location = 0) uniform ivec2 iResolution;
 layout (location = 1) uniform float iTime;
 layout (location = 2) uniform mat4 MVP;
-layout (location = 3) uniform mat4 _cameraViewInverse;
-layout (location = 4) uniform mat4 _cameraViewMatrix;
+layout (location = 3) uniform mat4 _cameraViewMatrix;
+layout (location = 4) uniform mat4 _cameraProjectionMatrix; 
+layout (location = 7) uniform mat4 _cameraViewInverse;
 layout (location = 6) uniform vec3 _cameraDirection; 
-layout (location = 9) uniform mat4 _cameraProjectionMatrix; 
 
 layout (location = 16) uniform vec3 samples[64];
 
@@ -57,9 +57,13 @@ void main()
     vec3 fragColor = texture(bColor, uvScreen).rgb;
     
     vec3 tnormal = texture(gNormal, uvScreen).rgb;
+    
+    if(min(distance(tnormal, vec3(1)), distance(tnormal, vec3(0))) < 0.1) discard;
+
     vec3 normal = tnormal * 2.0 - 1.0;
 
     if(normal.x >= 1.0 && normal.y >= 1.0 && normal.y >= 1.0) discard;
+
 
     normal = normalize(normal);
 

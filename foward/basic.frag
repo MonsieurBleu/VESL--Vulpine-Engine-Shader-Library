@@ -21,8 +21,8 @@ void main() {
     normalComposed = gl_FrontFacing ? normalComposed : -normalComposed;
 
     fragColor.rgb = bColor;
-    fragEmmisive = vec3(0);
 
     // fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb) * 0.5 + 0.5;
-    fragNormal = vec3(0);
+    // fragEmmisive = vec3(0);
+    fragNormal = vec3(1);
 }

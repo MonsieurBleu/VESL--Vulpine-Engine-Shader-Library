@@ -34,7 +34,17 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
         return 1.;
 
     float res = 0.;
-    float bias = 0.00005; // 0.00002
+    float bias = 0.00002
+        * (1.0 - distance(nDotL, cos(PI*0.5)))
+        // * (0.1 + 0.9*pow(max((nDotL), 0.0), 1.0))
+        // * clamp(abs(nDotL - 0.5)*2.0, 0., 1.)
+    ; // 0.00002
+
+    // fragColor.rgb = vec3(1.0 - nDotL);
+    // return 1.0 - distance(nDotL, cos(PI*0.5));
+
+    // sunLightMult = bias;
+
     // bias /= 1.0 + nDotL;
     float radius = ESS_BASE_PENUMBRA_RADIUS; // 0.0015
 
@@ -89,9 +99,14 @@ void getLightDirectionnal(
     in int mapID,
     in mat4 matrix)
 {
+    if(intensity <= 1e-3) return;
+
     lightResult = getLighting(direction, color);
     factor = shadows ? intensity : intensity*getShadow(bShadowMaps[mapID], matrix, dot(normalComposed, direction));
-    sunLightMult *= factor ;
+
+    // sunLightMult += max(dot(-direction, normalComposed), 0);
+    sunLightMult += factor/intensity;
+    sunLightMult = min(sunLightMult , 1.0);
 }
 
 void getLightPoint(
@@ -113,6 +128,11 @@ void getLightPoint(
     TODO : add tube light
 */
 
+#define GET_LIGHT_INIT \
+    Material result; result.result = vec3(.0); \
+    nDotV = max(dot(normalComposed, viewDir), .0);
+
+
 #ifdef USE_CLUSTERED_RENDERING
 ivec3 getClusterId(const float ivFar, const ivec3 steps)
 {
@@ -125,17 +145,23 @@ ivec3 getClusterId(const float ivFar, const ivec3 steps)
 
 Material getMultiLight()
 {
-    Material result; result.result = vec3(.0);
-    nDotV = max(dot(normalComposed, viewDir), .0);
+    GET_LIGHT_INIT
 
     float factor = 0.f;
-    Material r = {vec3(0.0)};
+    Material r = {vec3(0.0), vec3(0.0)};
     Light sun = lights[0];
     getLightDirectionnal(
         r, factor, sun.direction.xyz, sun.color.rgb, sun.color.a, 
         (sun.infos.b % 2) == 0, sun.infos.r, sun.matrix);
     result.result += r.result*factor;
+    result.reflect += r.reflect;
 
+    Light moon = lights[1];
+    getLightDirectionnal(
+        r, factor, moon.direction.xyz, moon.color.rgb, moon.color.a, 
+        (moon.infos.b % 2) == 0, moon.infos.r, moon.matrix);
+    result.result += r.result*factor;
+    result.reflect += r.reflect;
 
     ivec3 clusterId = getClusterId(vFarLighting, frustumClusterDim);
 
@@ -174,6 +200,7 @@ Material getMultiLight()
         }
 
         result.result += r.result*factor;
+        result.reflect += r.reflect;
     }
 
     return result;
@@ -183,13 +210,13 @@ Material getMultiLight()
 Material getMultiLight()
 {
     int id = 0;
-    Material result; result.result = vec3(.0);
-    nDotV = max(dot(normalComposed, viewDir), .0);
+
+    GET_LIGHT_INIT 
 
     for(;;id++)
     {
         Light l = lights[id];
-        Material r; r.result = vec3(.0);
+        Material r; r.result = vec3(.0); r.reflect = vec3(0.0);
         float factor = 0.f;
 
         switch(l.infos.a)
@@ -207,6 +234,7 @@ Material getMultiLight()
         }
 
         result.result += r.result*factor;
+        result.reflect += r.reflect;
     }
 
     return result;
