@@ -66,7 +66,21 @@ void main()
         fragNormal = vec3(1);
         break;
 
-        default : getSkyColors(dir, fragColor.rgb, fragEmmisive.rgb);
+        default : 
+        
+        // dir.y = clamp(dir.y, 0., 1.);
+        // dir = normalize(dir);
+
+        if(dir.y < 0)
+        {
+            dir.y *= -1;
+            fragColor.rgb = clamp(getAtmopshereColor(dir), vec3(0), vec3(1));
+        }
+        else
+        {
+            getSkyColors(dir, fragColor.rgb, fragEmmisive.rgb);
+        }
+
         fragNormal = vec3(0);
         break;
 

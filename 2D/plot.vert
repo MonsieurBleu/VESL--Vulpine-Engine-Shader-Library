@@ -21,6 +21,7 @@ void main()
 
 
     position.z = 0.9;
+    position.z = _position.z + 0.01;
 
     gl_Position = vec4(position, 1.0);
 };
