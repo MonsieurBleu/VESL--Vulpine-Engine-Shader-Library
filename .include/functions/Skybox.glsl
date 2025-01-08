@@ -187,6 +187,9 @@ vec3 atmosphericScattering(
     float phaseRay = 3.0 / (50.2654824574 /* (16 * pi) */) * (1.0 + mumu);
     float phaseMie = 3.0 / (25.1327412287 /* (8 * pi) */) * ((1.0 - gg) * (mumu + 1.0)) / (pow(1.0 + gg - 2.0 * mu * G, 1.5) * (2.0 + gg));
 
+    // make the mie scattering more intense, increasing the brightness and size of the blob around the sun
+    phaseMie *= 3.0;
+
     // return vec3(phaseMie);
 
     for (int i = 0; i < IN_STEPS; i++)
