@@ -1,13 +1,13 @@
 #ifndef FNCT_NOISE_GLSL
 #define FNCT_NOISE_GLSL
 
-#include globals/Constants.glsl
-
+#include functions/Hash.glsl
 
 /*****
-    ACTUAL GOOD AND SOMEWHAT FAST RANDOM FUNCTIONS INSPIRED BY GOLD NOISE
+    INSPIRED BY GOLD NOISE
 
-    seed can be easly implemented
+    Kiiinda slow and not seedable noise function.
+    Made for the legacy VESL noise library
 *****/
 float rand2to1(vec2 p)
 {
