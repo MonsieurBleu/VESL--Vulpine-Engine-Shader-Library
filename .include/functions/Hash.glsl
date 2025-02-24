@@ -1,3 +1,6 @@
+#ifndef FUNCTIONS_HASH_GLSL
+#define FUNCTIONS_HASH_GLSL
+
 #include globals/Constants.glsl
 
 /* ###===== Vulpine Hash =====###
@@ -100,3 +103,5 @@ float FiHash(vec2 p) {
     uvec2 u = floatBitsToUint(p * vec2(141421356, 2718281828));
     return float((u.x ^ u.y) * 3141592653u) / float(~0u);
 }
+
+#endif

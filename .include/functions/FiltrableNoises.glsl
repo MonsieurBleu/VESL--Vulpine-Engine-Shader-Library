@@ -2,6 +2,97 @@
 #define FILTRABLE_NOISE_GLSL
 
 #include globals/Constants.glsl
+#include functions/Hash.glsl
+
+/* ###===== Vulpine's Filtered Spike Noise =====###
+*
+*   This is a filtrable and fast noise function that emulate random spikes on a flat surface.
+*
+*   This noise is highly parametrable, with an alpha value that aims to emulate a non-stationnary
+*   behaviour.
+*
+*/
+float FilteredSpikeNoise(
+    vec2 uv,            /* UV of the sample. From -10⁷ to +10⁷ for the vulpine hash tu be define */
+    float res,          /* Resolution / scale of the noise */
+    int iterations,     /* Number of iteration. More iteration = more spikes but slower. From 1 to 17.*/
+    float alpha,        /* The wanted average intensity */
+    float exageration,  /* Exageration of the spikes sharpiness */
+    float seed,          /* Seed of the effect */
+    float displacement  /* Displacement added to the random overlaping grid, usefull to animate this noise*/
+    )
+{
+    vec2[17] gridOff = vec2[17](
+        vec2(+.0, +.0),
+
+        vec2(+.5, +.5)*SQR2,
+        vec2(-.5, +.5)*SQR2,
+        vec2(+.5, -.5)*SQR2,
+        vec2(-.5, -.5)*SQR2,
+
+        vec2(+.5, +.0)*PI,
+        vec2(-.0, +.5)*PI,
+        vec2(+.0, -.5)*PI,
+        vec2(-.5, -.0)*PI,
+    
+        vec2(+.5, +.5)*PI*SQR3,
+        vec2(-.5, +.5)*PI*SQR3,
+        vec2(+.5, -.5)*PI*SQR3,
+        vec2(-.5, -.5)*PI*SQR3,
+
+        vec2(+.5, +.0)*E,
+        vec2(-.0, +.5)*E,
+        vec2(+.0, -.5)*E,
+        vec2(-.5, -.0)*E
+    );
+
+    uv /= res;
+
+    float filterD = length(max(dFdx(uv), dFdy(uv)));
+    float filterLevel = filterD*2.5;
+
+    float fullResNoise = 0.;
+    float filteredNoise = 0.;
+    
+    /* Average energy of the noise depending on alpha */
+    // float avgNoise = alpha*alpha*float(iterations)*0.06;
+    alpha = 1. - alpha;
+
+
+    for(int i = 0; i < iterations; i++)
+    {
+        float dn = 0.;
+        float dw = 0.;
+
+        vec2 iuv = uv + gridOff[i] + displacement*(.5 - vulpineHash2to2(i.rr, seed));
+
+        for(int mi = -1; mi <= 1; mi++)
+        for(int mj = -1; mj <= 1; mj++)
+        {
+            vec2 duv = iuv + vec2(mi, mj);
+            vec2 cuv = round(duv) + .25*vulpineHash2to2(round(duv), seed);
+            float intensity = mix(.35, exageration * smoothstep(-1., 1., alpha), vulpineHash2to1(cuv, seed) + alpha);
+
+            /* Full Res Noise Calculation */
+            if(mj == 0 && mi == 0)
+                fullResNoise += smoothstep(0., intensity, 1. - 4.*distance(duv, cuv));
+            
+            /* Cell's approximate average energy */
+            float w = clamp(1. - distance(iuv, duv), 1., 0.);
+            dw += w;
+            float r2 = 1. - min(intensity, 1.);
+            dn += w * (PI/48.)*(1. - r2*r2)/intensity;
+        }
+
+        filteredNoise += dn / dw;
+    }
+    /* Mix between LOD 1 and LOD 2 */
+    // filteredNoise = mix(filteredNoise, avgNoise, smoothstep(5., 24., filterLevel));
+
+    /* Final mix between full res noise and filtered version */
+    return mix(fullResNoise, filteredNoise, smoothstep(0., 1., filterLevel));
+}
+
 
 //=======================================================
 //= Filtered Local Random Phase Noise 
