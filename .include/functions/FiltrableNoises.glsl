@@ -4,6 +4,18 @@
 #include globals/Constants.glsl
 #include functions/Hash.glsl
 
+vec2 rotate(vec2 uv, vec2 c, float a)
+{
+    uv -= c;
+
+    uv = vec2(
+        uv.x*cos(a) - uv.y*sin(a),
+        uv.x*sin(a) + uv.y*cos(a)
+    );
+
+    return uv + c;
+}
+
 /* ###===== Vulpine's Filtered Spike Noise =====###
 *
 *   This is a filtrable and fast noise function that emulate random spikes on a flat surface.
@@ -26,24 +38,24 @@ float FilteredSpikeNoise(
         vec2(+.0, +.0),
 
         vec2(+.5, +.5)*SQR2,
-        vec2(-.5, +.5)*SQR2,
-        vec2(+.5, -.5)*SQR2,
-        vec2(-.5, -.5)*SQR2,
+        vec2(-.5, +.5)*SQR2*SQR3,
+        vec2(+.5, -.5)*SQR2*SQR3,
+        vec2(-.5, -.5)*SQR2*E,
 
         vec2(+.5, +.0)*PI,
-        vec2(-.0, +.5)*PI,
-        vec2(+.0, -.5)*PI,
-        vec2(-.5, -.0)*PI,
+        vec2(-.0, +.5)*PI*SQR2,
+        vec2(+.0, -.5)*PI*SQR2,
+        vec2(-.5, -.0)*PI*E,
     
-        vec2(+.5, +.5)*PI*SQR3,
-        vec2(-.5, +.5)*PI*SQR3,
-        vec2(+.5, -.5)*PI*SQR3,
-        vec2(-.5, -.5)*PI*SQR3,
+        vec2(+.5, +.5)*PHI,
+        vec2(-.5, +.5)*PHI*PI,
+        vec2(+.5, -.5)*PHI*E,
+        vec2(-.5, -.5)*PHI*SQR2,
 
         vec2(+.5, +.0)*E,
-        vec2(-.0, +.5)*E,
-        vec2(+.0, -.5)*E,
-        vec2(-.5, -.0)*E
+        vec2(-.0, +.5)*E*PHI,
+        vec2(+.0, -.5)*E*PI,
+        vec2(-.5, -.0)*E*E
     );
 
     uv /= res;
@@ -65,6 +77,8 @@ float FilteredSpikeNoise(
         float dw = 0.;
 
         vec2 iuv = uv + gridOff[i] + displacement*(.5 - vulpineHash2to2(i.rr, seed));
+
+        iuv = rotate(iuv, -2.*gridOff[i],  PI*(.5 - vulpineHash2to1(i.rr, seed))*2.);
 
         for(int mi = -1; mi <= 1; mi++)
         for(int mj = -1; mj <= 1; mj++)
