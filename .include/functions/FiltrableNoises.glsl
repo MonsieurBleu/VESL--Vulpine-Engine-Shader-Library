@@ -4,6 +4,17 @@
 #include globals/Constants.glsl
 #include functions/Hash.glsl
 
+/* Caculate a derivative of any variable similar to how OpenGL handles MipMaps
+*  Source : 
+*       https://web.archive.org/web/20231028013022/https://community.khronos.org/t/mipmap-level-calculation-using-dfdx-dfdy/67480
+*/
+float derivative(vec2 uv)
+{
+    vec2 dy = dFdy(uv);
+    vec2 dx = dFdx(uv);
+    return max(0., .5 * log2(max(dot(dx, dx), dot(dy, dy))));
+}
+
 vec2 rotate(vec2 uv, vec2 c, float a)
 {
     uv -= c;
@@ -60,8 +71,13 @@ float FilteredSpikeNoise(
 
     uv /= res;
 
-    float filterD = length(max(dFdx(uv), dFdy(uv)));
-    float filterLevel = filterD*2.5;
+    /* Naive Filter Lever calculation */
+    // float filterD = length(max(dFdx(uv), dFdy(uv)));
+    // float filterLevel = filterD*2.5;
+
+    /* Filter Level using the Determinant of the Jacobian Matrix*/
+    float dd = 6.75;
+    float filterLevel = derivative(uv*16.*dd)/dd;
 
     float fullResNoise = 0.;
     float filteredNoise = 0.;
