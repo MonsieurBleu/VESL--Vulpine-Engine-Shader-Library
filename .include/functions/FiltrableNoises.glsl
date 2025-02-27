@@ -15,6 +15,11 @@ float derivative(vec2 uv)
     return max(0., .5 * log2(max(dot(dx, dx), dot(dy, dy))));
 }
 
+float linearstep(float e0, float e1, float x)
+{
+    return clamp((x - e0)/(e1 - e0), 0., 1.);
+}
+
 vec2 rotate(vec2 uv, vec2 c, float a)
 {
     uv -= c;
@@ -71,21 +76,17 @@ float FilteredSpikeNoise(
 
     uv /= res;
 
-    /* Naive Filter Lever calculation */
-    // float filterD = length(max(dFdx(uv), dFdy(uv)));
-    // float filterLevel = filterD*2.5;
-
     /* Filter Level using the Determinant of the Jacobian Matrix*/
     float dd = 6.75;
+    dd = 5.;
     float filterLevel = derivative(uv*16.*dd)/dd;
 
     float fullResNoise = 0.;
     float filteredNoise = 0.;
     
-    /* Average energy of the noise depending on alpha */
-    // float avgNoise = alpha*alpha*float(iterations)*0.06;
     alpha = 1. - alpha;
 
+    mat3 clampedFilterWeight = mat3(0);
 
     for(int i = 0; i < iterations; i++)
     {
@@ -93,8 +94,7 @@ float FilteredSpikeNoise(
         float dw = 0.;
 
         vec2 iuv = uv + gridOff[i] + displacement*(.5 - vulpineHash2to2(i.rr, seed));
-
-        iuv = rotate(iuv, -2.*gridOff[i],  PI*(.5 - vulpineHash2to1(i.rr, seed))*2.);
+        vec2 icuv = round(iuv) + .25*vulpineHash2to2(round(iuv), seed);
 
         for(int mi = -1; mi <= 1; mi++)
         for(int mj = -1; mj <= 1; mj++)
@@ -108,19 +108,38 @@ float FilteredSpikeNoise(
                 fullResNoise += smoothstep(0., intensity, 1. - 4.*distance(duv, cuv));
             
             /* Cell's approximate average energy */
-            float w = clamp(1. - distance(iuv, duv), 1., 0.);
-            dw += w;
+
+            /* Blured transition between cell's average */
+            float w = SQR2 - distance(iuv, round(duv));
+            w = max(0., w);
             float r2 = 1. - min(intensity, 1.);
-            dn += w * (PI/48.)*(1. - r2*r2)/intensity;
+            float dnj = (PI/48.)*(1. - r2*r2)/intensity;
+
+            dw += w;
+            dn += w * dnj;
         }
 
         filteredNoise += dn / dw;
+
+        ivec2 idCFW = ivec2(floor(fract(icuv - .5)*3.));
+        clampedFilterWeight[idCFW.x][idCFW.y] += dn/dw;
     }
+
+    filteredNoise = 0.;
+    for(int i = 0; i < 3; i++)
+    for(int j = 0; j < 3; j++)
+    {
+        filteredNoise += min(clampedFilterWeight[i][j], 0.19 + float(iterations)*0.0019);
+    }
+
     /* Mix between LOD 1 and LOD 2 */
-    // filteredNoise = mix(filteredNoise, avgNoise, smoothstep(5., 24., filterLevel));
+    // filteredNoise = mix(filteredNoise, avgNoise, clamp((filterLevel-1.), 0., 1.));
+
+    fullResNoise = clamp(fullResNoise, 0., 1.);
+    filteredNoise = clamp(filteredNoise, 0., 1.);
 
     /* Final mix between full res noise and filtered version */
-    return mix(fullResNoise, filteredNoise, smoothstep(0., 1., filterLevel));
+    return mix(fullResNoise, filteredNoise, linearstep(.6, 1., filterLevel));
 }
 
 
