@@ -8,6 +8,13 @@
 *  Source : 
 *       https://web.archive.org/web/20231028013022/https://community.khronos.org/t/mipmap-level-calculation-using-dfdx-dfdy/67480
 */
+float derivative(float u)
+{
+    float dy = dFdy(u);
+    float dx = dFdx(u);
+    return max(0., .5 * log2(max(dot(dx, dx), dot(dy, dy))));
+}
+
 float derivative(vec2 uv)
 {
     vec2 dy = dFdy(uv);
@@ -129,17 +136,18 @@ float FilteredSpikeNoise(
     for(int i = 0; i < 3; i++)
     for(int j = 0; j < 3; j++)
     {
-        filteredNoise += min(clampedFilterWeight[i][j], 0.19 + float(iterations)*0.0019);
+        filteredNoise += min(clampedFilterWeight[i][j], 0.14 + float(iterations)*0.005);
     }
 
     /* Mix between LOD 1 and LOD 2 */
-    // filteredNoise = mix(filteredNoise, avgNoise, clamp((filterLevel-1.), 0., 1.));
+    // float avgNoise = .5*(1.-alpha);
+    // filteredNoise = mix(filteredNoise, avgNoise, linearstep(.8, 1.5, filterLevel));
 
     fullResNoise = clamp(fullResNoise, 0., 1.);
     filteredNoise = clamp(filteredNoise, 0., 1.);
 
     /* Final mix between full res noise and filtered version */
-    return mix(fullResNoise, filteredNoise, linearstep(.6, 1., filterLevel));
+    return mix(fullResNoise, filteredNoise, linearstep(.5, 1., filterLevel));
 }
 
 
