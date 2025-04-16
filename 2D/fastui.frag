@@ -89,7 +89,7 @@ void main() {
         case 3:
             // borderSize /= scale;
             // borderSize *= 0.1;
-            border = drawSquare(uvAR);
+            // border = drawSquare(uvAR);
             break;
 
         case 2:
