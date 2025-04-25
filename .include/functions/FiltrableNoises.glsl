@@ -3,6 +3,7 @@
 
 #include globals/Constants.glsl
 #include functions/Hash.glsl
+#include functions/Steps.glsl
 
 /* Caculate a derivative of any variable similar to how OpenGL handles MipMaps
 *  Source : 
@@ -20,11 +21,6 @@ float derivative(vec2 uv)
     vec2 dy = dFdy(uv);
     vec2 dx = dFdx(uv);
     return max(0., .5 * log2(max(dot(dx, dx), dot(dy, dy))));
-}
-
-float linearstep(float e0, float e1, float x)
-{
-    return clamp((x - e0)/(e1 - e0), 0., 1.);
 }
 
 vec2 rotate(vec2 uv, vec2 c, float a)
