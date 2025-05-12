@@ -5,6 +5,21 @@
 #include functions/Hash.glsl
 #include functions/Steps.glsl
 
+float derivativeLinear(float u)
+{
+    float dy = dFdy(u);
+    float dx = dFdx(u);
+    return max(0., dx + dy);
+    // return max(0., max(abs(dx), abs(dy)));
+}
+
+float derivativeLinear(vec2 uv)
+{
+    vec2 dy = dFdy(uv);
+    vec2 dx = dFdx(uv);
+    return max(0., max(dot(dx, dx), dot(dy, dy)));
+}
+
 /* Caculate a derivative of any variable similar to how OpenGL handles MipMaps
 *  Source : 
 *       https://web.archive.org/web/20231028013022/https://community.khronos.org/t/mipmap-level-calculation-using-dfdx-dfdy/67480
@@ -13,14 +28,21 @@ float derivative(float u)
 {
     float dy = dFdy(u);
     float dx = dFdx(u);
-    return max(0., .5 * log2(max(dot(dx, dx), dot(dy, dy))));
+    return .5*max(0., .5 * log2(max(dot(dx, dx), dot(dy, dy))) - 1.);
 }
 
 float derivative(vec2 uv)
 {
     vec2 dy = dFdy(uv);
     vec2 dx = dFdx(uv);
-    return max(0., .5 * log2(max(dot(dx, dx), dot(dy, dy))));
+    return .5*max(0., 0.5 * log2(max(dot(dx, dx), dot(dy, dy))) - 1.);
+}
+
+float derivativeSum(vec2 uv)
+{
+    vec2 dy = dFdy(uv);
+    vec2 dx = dFdx(uv);
+    return .5*max(0., 0.5 * log2(dot(dx, dx) + dot(dy, dy)) - 1.);
 }
 
 vec2 rotate(vec2 uv, vec2 c, float a)
@@ -223,6 +245,71 @@ float FilteredSpikeNoise(
         float alpha  = 1./1.2;
 
         mat2  Jacobian = mat2( 0.5*dFdx(scaled_coords), 0.5*dFdy(scaled_coords) );
+        mat2  Filter_Sigma = Jacobian*transpose(Jacobian);
+        mat2  Filter_InvSigma = inverse(Filter_Sigma);
+        float Filter_Lambda = 1.0 / (2.*PI*sqrt(determinant_2x2(Filter_Sigma)));
+
+        mat2 Gabor_Sigma = mat2( 1.0 / (2.*PI*alpha*alpha) );
+        mat2 Gabor_InvSigma = mat2( 2.*PI*alpha*alpha );
+        mat2 Product_InvSigma = Filter_Sigma+Gabor_Sigma;
+        mat2 Product_Sigma = inverse(Product_InvSigma);
+
+        for (int m=-1; m<=+1; m++)
+        for (int n=-1; n<=+1; n++)
+        {
+            cell_ID.x = int(cell_index.x) + m;
+            cell_ID.y = int(cell_index.y) + n;
+            seed = cell_seed(cell_ID,LRPN_GLOBAL_SEED);
+            prng = wang_hash(seed);
+
+            vec2 xy = cell_coords - vec2(m,n) - vec2(0.5);
+            
+            float sum_of_cosines    = 0.; 
+            for(int k=0; k<cosines; k++)
+            {
+                float fr = myrand_uniform_m_M(prng,range_frequency.x,range_frequency.y) * resolution;   // Scaled Frequency 
+                float or = myrand_uniform_m_M(prng,range_orientation.x,range_orientation.y);            // Orientation
+                float ph = PI*(myrand_uniform_0_1(prng)*2.-1.);                                       // Phase
+                
+                vec2 Gabor_Mean = 2.*PI * fr * vec2(cos(or),sin(or));  // Oriented Frequency
+                
+                // Now we compute the product of the gaussian footprint and the 
+                // fourier transform of the gabor kernel in the spectral domain
+                
+                vec2 Product_Mean = Product_Sigma * Gabor_Sigma * Gabor_Mean; // \mu_3
+
+                float scale_gabor = sqrt(determinant_2x2(Gabor_Sigma)*determinant_2x2(Product_Sigma));
+                scale_gabor *= gaussian(vec2(0.),1.,Gabor_Mean,Filter_InvSigma+Gabor_InvSigma); //\lambda_3
+                scale_gabor *= gaussian_inv_sigma(xy,1.,vec2(0.),Product_Sigma); // new window
+                float filtered_harmonic = dot(xy, Product_Mean) + ph; // new harmonic
+
+                sum_of_cosines   += scale_gabor * cos(filtered_harmonic) ; // the new anisotropic gabor kernel
+            }
+            lrpn += weight * sum_of_cosines;
+        }
+        return lrpn;
+    }
+
+    float local_random_phase_noise(
+            in vec2  texcoords,
+            in float resolution,
+            in int   cosines,
+            in vec2  range_frequency,
+            in vec2  range_orientation
+        )
+    {
+        vec2  scaled_coords = texcoords * resolution;
+        vec2  cell_coords   = fract(scaled_coords);
+        vec2  cell_index    = floor(scaled_coords);
+        
+        ivec2 cell_ID;
+        uint  prng, seed;
+        
+        float lrpn   = 0.;
+        float weight = 1. / float(cosines);
+        float alpha  = 1./1.2;
+
+        mat2  Jacobian = mat2(0.001);
         mat2  Filter_Sigma = Jacobian*transpose(Jacobian);
         mat2  Filter_InvSigma = inverse(Filter_Sigma);
         float Filter_Lambda = 1.0 / (2.*PI*sqrt(determinant_2x2(Filter_Sigma)));
