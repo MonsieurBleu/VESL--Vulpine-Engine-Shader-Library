@@ -105,7 +105,8 @@ void main() {
                 // 0.02/scale
                 // 0.03 * max(arCorrection.x, arCorrection.y)
                 // 30 / (max(arCorrection.x, arCorrection.y) / scale)
-                0.75
+                // 0.75
+                0.333
                 ,
 
                 uvAR);

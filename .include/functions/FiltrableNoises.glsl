@@ -17,7 +17,8 @@ float derivativeLinear(vec2 uv)
 {
     vec2 dy = dFdy(uv);
     vec2 dx = dFdx(uv);
-    return max(0., max(dot(dx, dx), dot(dy, dy)));
+    return length(dx) + length(dy);
+    // return length(max(abs(dx), abs(dy)));
 }
 
 /* Caculate a derivative of any variable similar to how OpenGL handles MipMaps
