@@ -36,7 +36,9 @@ float derivative(vec2 uv)
 {
     vec2 dy = dFdy(uv);
     vec2 dx = dFdx(uv);
-    return .5*max(0., 0.5 * log2(max(dot(dx, dx), dot(dy, dy))) - 1.);
+    // return .5*max(0., log2(max(length(dx), length(dy))));
+    // return .5*max(0., 0.5 * log2(dot(dx, dx) + dot(dy, dy)) - 1.0);
+    return .5*max(0., 0.5 * log2(max(dot(dx, dx), dot(dy, dy)) - 1.0));
 }
 
 float derivativeSum(vec2 uv)
