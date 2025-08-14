@@ -61,9 +61,9 @@ vec3 getSkyboxReflection(vec3 v, vec3 n)
 
             // vec3 c = clamp(getSkyColor(-reflectDir), vec3(0), vec3(1));
             
-            vec3 tmp;
-            vec3 voronoi = voronoi3d(reflectDir * 10., tmp);
-            reflectDir = mix(reflectDir, normalize(rand3to3(tmp) * 2.0 - 1.0), 0.3*mRoughness);
+            // vec3 tmp;
+            // vec3 voronoi = voronoi3d(reflectDir * 10., tmp);
+            // reflectDir = mix(reflectDir, normalize(rand3to3(tmp) * 2.0 - 1.0), 0.3*mRoughness);
             // reflectDir = mix(reflectDir, normalize(rand3to3(reflectDir) * 2.0 - 1.0), 0.1*mRoughness);
             reflectDir = normalize(reflectDir);
 
