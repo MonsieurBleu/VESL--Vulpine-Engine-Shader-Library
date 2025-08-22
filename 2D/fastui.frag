@@ -1,9 +1,9 @@
 #version 460
 
-#include uniform/Base2D.glsl
-#include uniform/Model3D.glsl
-#include functions/HSV.glsl
-#include globals/Constants.glsl
+ #include Base2D 
+ #include Model3D 
+#include HSV
+ #include Constants 
 
 layout(location = 0) out vec4 fragColor;
 
@@ -22,7 +22,7 @@ vec2 arCorrection = vec2(0);
 
 #define SKYBOX_REFLECTION
 #define SUN_DIR_NON_UNIFORM
-#include functions/Skybox.glsl
+#include Skybox 
 
 
 float drawCircle(vec2 inUv) {

@@ -3,8 +3,8 @@
 #define USING_VERTEX_TEXTURE_UV
 #define USING_LOD_TESSELATION
 
-#include uniform/Base3D.glsl
-#include uniform/Model3D.glsl
+ #include Base3D 
+ #include Model3D 
 
 // specify number of control points per patch output
 // this value controls the size of the input and output arrays

@@ -10,11 +10,11 @@ layout (triangles, equal_spacing, ccw) in;
 #define USING_VERTEX_TEXTURE_UV
 #define USING_LOD_TESSELATION
 
-#include uniform/Base3D.glsl
-#include uniform/Model3D.glsl
-#include globals/Vertex3DOutputs.glsl
+ #include Base3D 
+ #include Model3D 
+ #include Vertex3DOutputs 
 
-#include functions/Noise.glsl
+#include Noise 
 
 in vec2 patchUv[];
 in vec3 patchPosition[];
@@ -29,7 +29,7 @@ in vec3 patchNormal[];
 #endif
 
 #ifdef USING_TERRAIN_RENDERING
-#include functions/TerrainTexture.glsl
+#include TerrainTexture 
 out vec2 terrainUv;
 out float terrainHeight;
 out vec3 modelPosition;
@@ -161,7 +161,7 @@ void main()
     modelPosition = positionInModel;
 
     mat4 modelMatrix = _modelMatrix;
-    #include code/SetVertex3DOutputs.glsl
+     #include SetVertex3DOutputs 
     gl_Position = _cameraMatrix * vec4(position, 1.0);
 }
 	

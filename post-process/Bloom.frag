@@ -11,7 +11,7 @@ in vec2 uvScreen;
 
 out vec3 fragColor;
 
-#include functions/HSV.glsl
+#include HSV
 
 // How far from the center to take samples from the fragment you are currently on
 const int radius = 60;

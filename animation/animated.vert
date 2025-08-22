@@ -3,11 +3,11 @@
 #define USING_VERTEX_TEXTURE_UV
 #define USE_SKINNING 
 
-#include uniform/Base3D.glsl
-#include uniform/Model3D.glsl
+ #include Base3D 
+ #include Model3D 
 
-#include globals/Vertex3DInputs.glsl
-#include globals/Vertex3DOutputs.glsl
+ #include Vertex3DInputs 
+ #include Vertex3DOutputs 
 
 void main()
 {
@@ -24,6 +24,6 @@ void main()
         normal += _weights[i]*mat3(animMatrix)*_normal;
     }
 
-    #include code/SetVertex3DOutputs.glsl
+     #include SetVertex3DOutputs 
     gl_Position = _cameraMatrix * vec4(position, 1.0);
 };

@@ -1,7 +1,7 @@
 #version 460
 
-#include functions/HSV.glsl
-#include functions/Noise.glsl
+#include HSV
+#include Noise 
 
 layout(location = 0) uniform ivec2 iResolution;
 layout(location = 1) uniform float iTime;

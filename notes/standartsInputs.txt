@@ -11,7 +11,7 @@ Uniforms :
         6       vec3        _cameraDirection
         7       mat4        _cameraInverseViewMatrix
         8       
-        9       mat3        planetTangentSpac           used in functions/skybox.glsl
+        9       mat3        planetTangentSpac           used in functions/skybox 
         10      vec4        lodHeigtTextureRange        USING_LOD_TESSELATION
         11      vec4        lodHeightDispFactors        USING_LOD_TESSELATION
         12      vec4        lodTessLevelDistance        USING_LOD_TESSELATION
@@ -19,9 +19,9 @@ Uniforms :
         14      ivec3       frustumClusterDim           USE_CLUSTERED_RENDERING
         15      vec3        ambientLight
         16      mat4        _modelMatrix        
-        17      vec3        sunDir                      used in functions/skybox.glsl
-        18      vec3        moonPos                     used in functions/skybox.glsl
-        19      vec3        planetPos                   used in functions/skybox.glsl
+        17      vec3        sunDir                      used in functions/skybox 
+        18      vec3        moonPos                     used in functions/skybox 
+        19      vec3        planetPos                   used in functions/skybox 
         20      vec3        bColor                      used in basic.frag
     20-...    sampler2D     bColor/bMaterial...         same as models textures, but bindless
         ... 

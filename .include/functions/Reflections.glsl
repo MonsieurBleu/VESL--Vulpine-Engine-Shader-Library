@@ -1,7 +1,7 @@
 #ifndef FNCT_REFLECTIONS_GLSL
 #define FNCT_REFLECTIONS_GLSL
 
-#include functions/Skybox.glsl
+#include Skybox 
 
 float getReflectionFactor(float fresnel, float metallic, float roughness)
 {

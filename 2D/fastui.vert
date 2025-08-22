@@ -1,7 +1,7 @@
 #version 460
 
-#include uniform/Base2D.glsl
-#include uniform/Model3D.glsl
+ #include Base2D 
+ #include Model3D 
 
 layout (location = 0) in vec4 _position;
 layout (location = 1) in vec4 _color;

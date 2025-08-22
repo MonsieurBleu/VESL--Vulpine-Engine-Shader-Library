@@ -1,7 +1,7 @@
 #ifndef FNCT_SKYBOX_GLSL
 #define FNCT_SKYBOX_GLSL
 
-#include functions/Noise.glsl
+#include Noise 
 
 #ifdef CUBEMAP_SKYBOX
     layout (binding = 4) uniform samplerCube bSkyTexture; 

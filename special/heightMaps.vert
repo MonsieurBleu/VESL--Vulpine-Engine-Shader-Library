@@ -2,11 +2,11 @@
 
 #define USING_VERTEX_TEXTURE_UV
 
-#include uniform/Base3D.glsl
-#include uniform/Model3D.glsl
+ #include Base3D 
+ #include Model3D 
 
-#include globals/Vertex3DInputs.glsl
-#include globals/Vertex3DOutputs.glsl
+ #include Vertex3DInputs 
+ #include Vertex3DOutputs 
 
 #ifdef ARB_BINDLESS_TEXTURE
 layout (location = 22, bindless_sampler) uniform sampler2D bHeight;
@@ -79,7 +79,7 @@ void main()
     // uvc *= positionInModel.xz*normal.xz;
 
 
-    #include code/SetVertex3DOutputs.glsl
+     #include SetVertex3DOutputs 
 
     uv = uvc;
 

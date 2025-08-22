@@ -1,0 +1,10 @@
+~
+:   animatedPBRgeometry
+    :   frag PBR
+    :   vert animated
+    ;
+:   animatedPBRDepthOnly
+    :   frag depthOnly
+    :   vert animated
+    ;
+;

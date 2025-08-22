@@ -1,7 +1,7 @@
 #ifndef FNCT_NOISE_GLSL
 #define FNCT_NOISE_GLSL
 
-#include functions/Hash.glsl
+#include Hash 
 
 /*****
     INSPIRED BY GOLD NOISE
@@ -64,7 +64,7 @@ vec3 goldNoise3to3(in vec3 coordinate, in float seed)
         );
 }
 
-// https://github.com/tt6746690/computer-graphics-shader-pipeline/blob/master/src/random2.glsl
+// https://github.com/tt6746690/computer-graphics-shader-pipeline/blob/master/src/random2 
 vec2 random2(vec3 st){
   vec2 S = vec2( dot(st,vec3(127.1,311.7,783.089)),
              dot(st,vec3(269.5,183.3,173.542)) );

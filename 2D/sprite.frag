@@ -1,7 +1,7 @@
 #version 460
 
-#include uniform/Base3D.glsl
-#include uniform/Model3D.glsl
+ #include Base3D 
+ #include Model3D 
 
 layout (location = 0) out vec4 fragColor;
 

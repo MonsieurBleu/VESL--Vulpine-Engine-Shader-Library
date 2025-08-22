@@ -1,7 +1,7 @@
-#include uniform/Ligths.glsl
+ #include Ligths 
 
-#include functions/Noise.glsl
-#include functions/standardMaterial.glsl
+#include Noise 
+#include standardMaterial 
 
 vec3 lcalcPosition;
 

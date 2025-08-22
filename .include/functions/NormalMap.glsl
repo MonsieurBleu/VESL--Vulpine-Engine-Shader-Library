@@ -1,7 +1,7 @@
 #ifndef FNCT_NORMAL_MAP_GLSL
 #define FNCT_NORMAL_MAP_GLSL
 
-#include functions/FastMaths.glsl
+#include FastMaths 
 
 /*
     Source : http://www.thetenthplanet.de/archives/1180

@@ -1,7 +1,7 @@
 #ifndef FUNCTIONS_HASH_GLSL
 #define FUNCTIONS_HASH_GLSL
 
-#include globals/Constants.glsl
+ #include Constants 
 
 /* ###===== Vulpine Hash =====###
 *

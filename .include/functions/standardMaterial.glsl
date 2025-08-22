@@ -1,5 +1,5 @@
-#include functions/HSV.glsl
-#include globals/Constants.glsl
+#include HSV
+ #include Constants 
 
 float mRoughness = 0.0;
 float mRoughness2 = 0.0;

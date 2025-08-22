@@ -1,9 +1,9 @@
 #ifndef FILTRABLE_NOISE_GLSL
 #define FILTRABLE_NOISE_GLSL
 
-#include globals/Constants.glsl
-#include functions/Hash.glsl
-#include functions/Steps.glsl
+ #include Constants 
+#include Hash 
+#include Steps 
 
 float derivativeLinear(float u)
 {

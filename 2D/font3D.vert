@@ -2,8 +2,8 @@
 
 #define USING_VERTEX_TEXTURE_UV
 
-#include uniform/Base3D.glsl
-#include uniform/Model3D.glsl
+ #include Base3D 
+ #include Model3D 
 
 // layout(location = 32) uniform vec4 _textColor;
 
@@ -11,7 +11,7 @@ layout(location = 0) in vec3 _position;
 layout(location = 1) in vec2 _atlasUV;
 layout(location = 2) in uint _style;
 
-#include globals/Vertex3DOutputs.glsl
+ #include Vertex3DOutputs 
 
 out vec2 atlasUV;
 out flat uint bold;

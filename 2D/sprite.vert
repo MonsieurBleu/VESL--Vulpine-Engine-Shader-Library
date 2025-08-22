@@ -2,8 +2,8 @@
 
 #define USING_VERTEX_TEXTURE_UV
 
-#include uniform/Base3D.glsl
-#include uniform/Model3D.glsl
+ #include Base3D 
+ #include Model3D 
 
 layout(location = 0) in vec3 _position;
 

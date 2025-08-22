@@ -1,7 +1,7 @@
-mdFont
+~
 :   mdFont
     :   uniforms 2D
-    :   shader/2D/font.frag
+    :   frag font
     :   shader/2D/text.vert
     ;
 :   mdFontdepthOnly
