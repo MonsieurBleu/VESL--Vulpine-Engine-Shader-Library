@@ -33,7 +33,7 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
         // float tmp3 = 0.01;
         // nDotL = smoothstep(tmp3, tmp3+0.01, nDotL);
 
-        float tmp3 = 0.1; nDotL *= smoothstep(tmp3, tmp3+0.1, nDotL);
+        // float tmp3 = 0.1; nDotL *= smoothstep(tmp3, tmp3+0.1, nDotL);
 
         // float tmp3 = 0.0; nDotL = smoothstep(tmp3, tmp3+0.5, nDotL);
 

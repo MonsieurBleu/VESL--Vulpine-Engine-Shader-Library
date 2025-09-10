@@ -119,7 +119,6 @@ void getLightPoint(
 {
     float maxDist = max(radius, 0.0001);
     float distFactor = max(maxDist - distance(lcalcPosition, lPosition), 0.) / maxDist;
-    distFactor = 0.f;
     factor = distFactor * distFactor * intensity;
     lightResult = getLighting(normalize(lcalcPosition - lPosition), color);
 }
@@ -142,6 +141,8 @@ ivec3 getClusterId(const float ivFar, const ivec3 steps)
 
     return ivec3(floor(id*vec3(steps)));
 }
+
+float cnttmptmp = 0.f;
 
 Material getMultiLight()
 {
@@ -184,6 +185,7 @@ Material getMultiLight()
     for(;; id++)
     {
         int lid = lightsID[id];
+        cnttmptmp += 1.;
 
         Light l = lights[lid];
         r.result = vec3(.0);

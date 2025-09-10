@@ -77,7 +77,7 @@ vec3 getSkyboxReflection(vec3 v, vec3 n)
 
             reflectDir.y = -abs(reflectDir.y);
 
-                c = clamp(getAtmopshereColor(-reflectDir), vec3(0), vec3(1));
+            c = clamp(getAtmopshereColor(-reflectDir), vec3(0), vec3(1));
 
             // sunLightMult = 1;
 
