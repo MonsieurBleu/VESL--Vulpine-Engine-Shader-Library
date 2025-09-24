@@ -11,8 +11,8 @@
 
 
 #ifdef SUN_DIR_NON_UNIFORM
-    vec3 sunDir;
-    vec3 moonPos;
+    vec3 sunDir = vec3(0.0);
+    vec3 moonPos = vec3(0.0);
     vec3 planetPos = vec3(0);
     mat3 planetTangentSpace = mat3(1);
 #else
@@ -31,7 +31,7 @@
 vec3 getStars(vec3 viewDir, float starSize, float starDensity, float maxSaturation)
 {
     /*** Get star factor with voronoi gradientNoise ***/
-    vec3 cell_center;
+    vec3 cell_center = vec3(0.0);
     vec3 voronoi = voronoi3d(viewDir*starDensity, cell_center);
     float starFactor = 1. - smoothstep(0.0, starSize, voronoi.x);
 
@@ -415,8 +415,8 @@ vec3 getSkyColor(vec3 v)
 {
     // return v;
 
-    vec3 color;
-    vec3 _emmisive;
+    vec3 color = vec3(0);
+    vec3 _emmisive = vec3(0);
     getSkyColors(v, color, _emmisive);
 
     return color;
@@ -467,7 +467,7 @@ vec3 getAmbientInteriorColor(vec3 dir)
     const vec3 green = hsv2rgb(vec3(0.35, 0.5, 0.06));
     const vec3 grey = hsv2rgb(vec3(0.6, 0.3, 0.075));
 
-    vec3 cell_center;
+    vec3 cell_center = vec3(0.0);
     float scale = 10.;
     vec3 voronoi1 = voronoi3d(dir*scale, cell_center);
     vec3 voronoi2 = voronoi3d(1 + dir*scale*1.0, cell_center);
