@@ -100,7 +100,7 @@
     Infinite range
 */
 float FiHash(vec2 p) {
-    uvec2 u = floatBitsToUint(p * vec2(141421356, 2718281828));
+    uvec2 u = floatBitsToUint(p * vec2(141421356, 2718281828U));
     return float((u.x ^ u.y) * 3141592653u) / float(~0u);
 }
 

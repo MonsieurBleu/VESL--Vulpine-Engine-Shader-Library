@@ -3,7 +3,7 @@
 #include Noise 
 #include standardMaterial 
 
-vec3 lcalcPosition;
+vec3 lcalcPosition = vec3(0.0);
 
 /*
     Efficient soft-shadow with percentage-closer filtering
