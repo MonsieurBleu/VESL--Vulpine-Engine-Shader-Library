@@ -19,6 +19,7 @@
     layout (location = 17) uniform vec3 sunDir;
     layout (location = 18) uniform vec3 moonPos;
     layout (location = 19) uniform vec3 planetPos;
+    /* TODO : resolve location warning */
     layout (location = 9) uniform mat3 planetTangentSpace;
 #endif
 
@@ -109,9 +110,9 @@ rayTraceOut sphereIntersect(vec3 origin, vec3 direction, vec3 center, float radi
 }
 
 
-#define IN_STEPS 64
+#define IN_STEPS 24
 // at least 2 steps (or we get very wrong results) but 3 is better
-#define OUT_STEPS 3
+#define OUT_STEPS 2
 
 
 // Constants from https://www.shadertoy.com/view/wlBXWK
@@ -139,6 +140,7 @@ vec3 atmosphericScattering(
     vec3 sunIntensity,
     vec3 sceneColor,
     float maxDist,
+    bool doePhaseMie,
     out float brightness
 )
 {   
@@ -150,6 +152,9 @@ vec3 atmosphericScattering(
     //     vec3 farSide = origin + viewDir * planetIntersect.t2;
     //     origin = farSide + viewDir * 1000.0;
     // }
+    vec3 oViewDir = viewDir;
+    viewDir.y = clamp(viewDir.y, 0.025, 1.0);
+    viewDir = normalize(viewDir);
 
     float a = dot(viewDir, viewDir);
     float b = 2.0 * dot(viewDir, origin);
@@ -188,7 +193,7 @@ vec3 atmosphericScattering(
     float phaseMie = 3.0 / (25.1327412287 /* (8 * pi) */) * ((1.0 - gg) * (mumu + 1.0)) / (pow(1.0 + gg - 2.0 * mu * G, 1.5) * (2.0 + gg));
 
     // make the mie scattering more intense, increasing the brightness and size of the blob around the sun
-    phaseMie *= 3.0;
+    phaseMie *= doePhaseMie ? 512. : 0.;
 
     // return vec3(phaseMie);
 
@@ -273,9 +278,28 @@ vec3 atmosphericScattering(
         opticalDepthIn.x * AMBIENT_BETA
         );
 
+    
     brightness = dot(scatteredLight, vec3(0.2126, 0.7152, 0.0722)); 
 
-    return scatteredLight * sunIntensity + sceneColor * opacity;
+    // scatteredLight = vec3(1);
+    // if(doePhaseMie)
+    // {
+    //     float vdotl = max(dot(oViewDir, lightDir), 0.);
+    //     // scatteredLight += 0.25 * pow(smoothstep(cos(0.05), cos(0.0), dot(oViewDir, lightDir)), 5.0);
+    //     // sunIntensity *= 1. 
+    //     scatteredLight += 0.01*(
+    //         + 100.*pow(smoothstep(cos(0.05), cos(0.0), vdotl), 5.0)
+    //         // + 0.5*vdotl
+    //         + 0.5*pow(vdotl, 64.0)
+    //     )
+    //     ;
+
+    //     // return smoothstep(cos(1.0), cos(0.0), pow(dot(oViewDir, lightDir), 50.0)).rrr;
+    // }
+
+
+
+    return 2. * scatteredLight * sunIntensity + sceneColor * opacity;
 }
 
 vec3 rotate(vec3 v, float a, vec3 axis)
@@ -374,7 +398,7 @@ void getSkyColors(
     vec3 sceneColor = vec3(0);
     
     float brightness;
-    vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, sunDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS, brightness);
+    vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, sunDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS, true, brightness);
 
     brightness *= 255.0;
     brightness = clamp(brightness, 0.0, 1.0);
@@ -400,13 +424,13 @@ vec3 getAtmopshereColor(
     vec3 rayDir = dir;
     vec3 planetPos = vec3(0, PLANET_RADIUS + 100, 0);
 
-    const vec3 sunColor = vec3(1.0, 0.95, 0.85);
+    vec3 sunColor = vec3(1.0, 0.95, 0.85);
     vec3 lightIntensity = sunColor * 10.0;
     
     vec3 sceneColor = vec3(0);
     
     float brightness;
-    vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, sunDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS, brightness);
+    vec3 rayleighScatteringColor = atmosphericScattering(planetPos, rayDir, sunDir, lightIntensity, sceneColor, 3.0 * ATMOS_RADIUS, false, brightness);
 
     return rayleighScatteringColor;
 }

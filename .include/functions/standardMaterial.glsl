@@ -62,7 +62,6 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
     vec3 diffuse = kD * color / PI;
     
     
-    
     Material result;
     result.reflect = fresnelSchlick;
     #ifdef USE_TOON_SHADING
@@ -77,13 +76,16 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
 
         // specular += specular*vec3(nDotH2);
 
-        result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
+        result.result = (specular + diffuse) * lightColor * nDotL * 2.;
     #else
-        result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
+
+        // specular = vec3(0);
+        // diffuse = vec3(0);
+
+
+
+        result.result = (specular + diffuse) * lightColor * nDotL * 2.;
     #endif
-
-
-    
 
     return result;
 }

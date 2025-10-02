@@ -29,13 +29,17 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
     mapPosition.xyz /= mapPosition.w;
     mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
 
-    if (mapPosition.x < 0. || mapPosition.x > 1. ||
-        mapPosition.y < 0. || mapPosition.y > 1.)
+    const float borderBias = 1e-3;
+
+    if (mapPosition.x < borderBias || mapPosition.x > 1.0-borderBias ||
+        mapPosition.y < borderBias || mapPosition.y > 1.0-borderBias)
         return 1.;
 
     float res = 0.;
     float bias = 0.00002
-        * (1.0 - distance(nDotL, cos(PI*0.5)))
+
+        // * (1.0 - distance(nDotL, cos(PI*0.5)))
+
         // * (0.1 + 0.9*pow(max((nDotL), 0.0), 1.0))
         // * clamp(abs(nDotL - 0.5)*2.0, 0., 1.)
     ; // 0.00002
@@ -129,7 +133,7 @@ void getLightPoint(
 
 #define GET_LIGHT_INIT \
     Material result; result.result = vec3(.0); \
-    nDotV = max(dot(normalComposed, viewDir), .0);
+    nDotV = max(dot(normalComposed, viewDir), 1e-6);
 
 
 #ifdef USE_CLUSTERED_RENDERING

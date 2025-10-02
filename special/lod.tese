@@ -4,15 +4,16 @@
 #extension GL_ARB_bindless_texture : require
 #endif
 
+// layout (triangles, fractional_odd_spacing, ccw) in;
 layout (triangles, equal_spacing, ccw) in;
 // layout (triangles, fractional_even_spacing, ccw) in;
 
 #define USING_VERTEX_TEXTURE_UV
 #define USING_LOD_TESSELATION
 
- #include Base3D 
- #include Model3D 
- #include Vertex3DOutputs 
+#include Base3D 
+#include Model3D 
+#include Vertex3DOutputs 
 
 #include Noise 
 
@@ -93,27 +94,30 @@ void main()
         float slope = 1e-9; // TODO : add a slope controlled normal sampling bias
         float htmp = h;
 
-        for(int i = 0; i < 8; i++)
-        {
-            // vec2 uvb = 0.01*vec2(a[i], a[i+1]);
-            vec2 uvb = 0.0025*s[i];
-            vec2 uvs = clamp(hUv + uvb, vec2(1e-3), vec2(1-1e-3));
-            float _h = texture(bHeight, uvs).r;
+        // for(int i = 0; i < 8; i++)
+        // {
+        //     // vec2 uvb = 0.01*vec2(a[i], a[i+1]);
+        //     vec2 uvb = 0.00005*s[i];
+        //     vec2 uvs = clamp(hUv + uvb, vec2(1e-3), vec2(1-1e-3));
+        //     float _h = texture(bHeight, uvs).r;
 
-            slope = max(slope, abs(htmp-_h))/0.0025;
+        //     slope = max(slope, abs(htmp-_h))/0.0025;
 
-            h += _h*f[i];
-        }
-        h /= 7.0;
+        //     h += _h*f[i];
+        // }
+        // h /= 7.0;
 
         // positionInModel += normalG*(h-0.5)*lodHeightDispFactors.w;
-        positionInModel += normalG*(h-0.5);
+        positionInModel += normalG*(h);
 
         slope = clamp(slope, 0, 1);
         slope = pow(slope, 1.0);
 
-        const float bias = 0.0035*lodHeightDispFactors.z;
+        // const float bias = 0.0035*lodHeightDispFactors.z*0.1;
         // const float bias = 0.01*slope*lodHeightDispFactors.z;
+
+        // const float bias = 0.000005;
+        const float bias = 1.0/8192.0;
 
         float h1 = texture(bHeight, clamp(hUv+vec2(bias, 0), 0.001, 0.999)).r;
         float h2 = texture(bHeight, clamp(hUv-vec2(bias, 0), 0.001, 0.999)).r;
@@ -124,7 +128,9 @@ void main()
         // float dist = 0.5*bias/lodHeightDispFactors.w;
         // float dist = 0.075*bias/lodHeightDispFactors.w;
 
-        float dist = 2.0 * bias / lodHeightDispFactors.w;
+        // float dist = 2.0 * bias / lodHeightDispFactors.w;
+        // dist *= 0.1;
+        float dist = bias * 0.5 * (4096.0/384);
         vec3 nP1 = normal*h; 
         vec3 nP2 = normal*h3 + vec3(0.0, 0.0, dist); 
         vec3 nP3 = normal*h1 + vec3(dist, 0.0, 0.0); 
@@ -135,9 +141,9 @@ void main()
         vec3 n3 = -normalize(cross(nP2-nP1, nP5-nP1));
         vec3 n4 = -normalize(cross(nP4-nP1, nP3-nP1));
         normal = normalize(
-            +n1 
+            // +n1 
             +n2 
-            +n3 
+            // +n3 
             +n4 
             );   
     }
@@ -158,10 +164,29 @@ void main()
     }
     */
 
+
     modelPosition = positionInModel;
 
     mat4 modelMatrix = _modelMatrix;
+
      #include SetVertex3DOutputs 
+     
+    /*
+        Tmp curvature
+    */
+    // {
+    //     const float planetSize = 8192 * 8.;
+
+    //     float d = distance(position.xz, _cameraPosition.xz)/planetSize;
+ 
+    //     d = sin(acos(d));
+
+    //     d -= 1.;
+    //     d *= planetSize;
+
+    //     position.y += d;
+    // }
+
     gl_Position = _cameraMatrix * vec4(position, 1.0);
 }
 	
