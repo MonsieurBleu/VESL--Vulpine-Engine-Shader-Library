@@ -13,7 +13,7 @@ normal = normalize(modelMatrix * vec4(normal, 0.0)).rgb;
 position = (modelMatrix * vec4(positionInModel, 1.0)).rgb;
 viewVector = _cameraPosition - position;
 
-// #define DO_FAKE_PLANET_CURVATURE
+#define DO_FAKE_PLANET_CURVATURE
 #ifdef DO_FAKE_PLANET_CURVATURE
 {
     #define BASE_SIZE 8192 * 2.
