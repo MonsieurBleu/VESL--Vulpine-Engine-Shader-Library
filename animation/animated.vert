@@ -3,11 +3,11 @@
 #define USING_VERTEX_TEXTURE_UV
 #define USE_SKINNING 
 
- #include Base3D 
- #include Model3D 
+#include Base3D 
+#include Model3D 
 
- #include Vertex3DInputs 
- #include Vertex3DOutputs 
+#include Vertex3DInputs 
+#include Vertex3DOutputs 
 
 void main()
 {
