@@ -132,7 +132,7 @@ void getLightPoint(
 */
 
 #define GET_LIGHT_INIT \
-    Material result; result.result = vec3(.0); \
+    Material result; result.result = vec3(.0); result.reflected = vec3(0.); \
     nDotV = max(dot(normalComposed, viewDir), 1e-6);
 
 
@@ -153,20 +153,22 @@ Material getMultiLight()
     GET_LIGHT_INIT
 
     float factor = 0.f;
-    Material r = {vec3(0.0), vec3(0.0)};
+    Material r;
+    r.result = vec3(.0);
+    r.reflected = vec3(.0);
     Light sun = lights[0];
     getLightDirectionnal(
         r, factor, sun.direction.xyz, sun.color.rgb, sun.color.a, 
         (sun.infos.b % 2) == 0, sun.infos.r, sun.matrix);
     result.result += r.result*factor;
-    result.reflect += r.reflect;
+    result.reflected += r.reflected;
 
     Light moon = lights[1];
     getLightDirectionnal(
         r, factor, moon.direction.xyz, moon.color.rgb, moon.color.a, 
         (moon.infos.b % 2) == 0, moon.infos.r, moon.matrix);
     result.result += r.result*factor;
-    result.reflect += r.reflect;
+    result.reflected += r.reflected;
 
     ivec3 clusterId = getClusterId(vFarLighting, frustumClusterDim);
 
@@ -206,7 +208,7 @@ Material getMultiLight()
         }
 
         result.result += r.result*factor;
-        result.reflect += r.reflect;
+        result.reflected += r.reflected;
     }
 
     return result;
@@ -222,7 +224,7 @@ Material getMultiLight()
     for(;;id++)
     {
         Light l = lights[id];
-        Material r; r.result = vec3(.0); r.reflect = vec3(0.0);
+        Material r; r.result = vec3(.0); r.reflected = vec3(0.0);
         float factor = 0.f;
 
         switch(l.infos.a)
@@ -240,7 +242,7 @@ Material getMultiLight()
         }
 
         result.result += r.result*factor;
-        result.reflect += r.reflect;
+        result.reflected += r.reflected;
     }
 
     return result;

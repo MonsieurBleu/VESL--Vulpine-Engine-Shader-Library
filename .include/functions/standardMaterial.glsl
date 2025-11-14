@@ -17,7 +17,7 @@ float nDotV = 0.0;
 struct Material
 {
     vec3 result;
-    vec3 reflect;
+    vec3 reflected;
 };
 
 #ifdef USE_PBR
@@ -63,7 +63,8 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
     
     
     Material result;
-    result.reflect = fresnelSchlick;
+    result.reflected = fresnelSchlick;
+    result.reflected = vec3(.0);
     #ifdef USE_TOON_SHADING
         // float tmp1 = (1-mRoughness)*0.25 
         //     *pow(fresnelSchlick.x, 0.5)
