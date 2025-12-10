@@ -20,8 +20,11 @@ layout (binding = 0) uniform sampler2D bTexture;
 
 layout (location = 32) uniform int skyboxType;
 
- #include Fragment3DInputs 
- #include Fragment3DOutputs 
+#include Fragment3DInputs 
+#include Fragment3DOutputs 
+layout(location = 3) out vec3 fragMaterialPosition;
+layout(location = 4) out vec3 fragWorldPosition;
+layout(location = 5) out vec4 fragMaterialProperty;
 
 #include standardMaterial 
 #include Noise 
@@ -72,7 +75,8 @@ void main()
         // dir = normalize(dir);
 
         dir.y = abs(dir.y);
-        getSkyColors(dir, fragColor.rgb, fragEmmisive.rgb);
+        // getSkyColors(dir, fragColor.rgb, fragEmmisive.rgb);
+        fragColor.rgb = vec3(0.3, 0.60, 1.0);
 
         // if(dir.y < 0)
         // {
@@ -92,8 +96,12 @@ void main()
 
     // fragColor.rgb = getAmbientInteriorColor(dir);
 
-    
+    fragNormal = normal;
+    fragWorldPosition = position;
+    fragMaterialPosition = position/1000000.0;
+    fragMaterialProperty = vec4(-1.);
 
+    // fragMaterialPosition = vec3(1);
 
     // fragColor.a = 1.0;
 }
