@@ -1,11 +1,13 @@
+#ifndef STANDARD_MATERIAL
+#define STANDARD_MATERIAL
 #include HSV
- #include Constants 
+#include Constants 
 
 float mRoughness = 0.0;
 float mRoughness2 = 0.0;
 float mMetallic = 0.0;
 float mEmmisive = 0.0;
-
+float mSubSurfaceScattering = 0.0;
 float sunLightMult = 0.0;
 
 // vec3 ambientLight = vec3(0.2);
@@ -18,14 +20,23 @@ struct Material
 {
     vec3 result;
     vec3 reflected;
+    vec3 specular;
 };
 
 #ifdef USE_PBR
-Material getLighting(vec3 lightDirection, vec3 lightColor)
+
+
+Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
 {
     vec3 F0 = mix(vec3(0.04), color, mMetallic);
 
-    vec3 halfwayDir = normalize(-lightDirection + viewDir);
+    vec3 halfwayDir = normalize(viewDir-lightDirection);
+    // if(abs(dot(normalize(viewDir), normalize(lightDirection))) > 0.75)
+    //     halfwayDir = viewDir;
+
+    // if(distance(abs(lightDirection), abs(viewDir)) <= 0.19)
+    //     halfwayDir = vec3(0, 1, 0);
+
     float nDotH = max(dot(normalComposed, halfwayDir), 0.0);
     float nDotL = max(dot(normalComposed, -lightDirection), 0.0);
 
@@ -59,12 +70,16 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
     vec3 specular = fresnelSchlick * normalDistrib * geometry / max((4.0 * nDotV * nDotL), 0.00000001);
 
     vec3 kD = (vec3(1.0) - fresnelSchlick) * (1.0 - mMetallic);
+
+    // kD += sss;
+
     vec3 diffuse = kD * color / PI;
     
+    // diffuse = sss.xxx ;
     
     Material result;
     result.reflected = fresnelSchlick;
-    result.reflected = vec3(.0);
+    // result.reflected = vec3(.0);
     #ifdef USE_TOON_SHADING
         // float tmp1 = (1-mRoughness)*0.25 
         //     *pow(fresnelSchlick.x, 0.5)
@@ -88,11 +103,22 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
         result.result = (specular + diffuse) * lightColor * nDotL * 2.;
     #endif
 
+    result.specular = specular*lightColor;
+
+    color = rgb2hsv(color);
+
+    color.g += 0.125;
+
+    color = hsv2rgb(color);
+
+    result.result += sss.xxx * (1.0 - kD) * color * lightColor * 0.5;
+    // result.result *= 0.5;
+
     return result;
 }
 #else
 #ifdef USE_BLINN_PHONG
-Material getLighting(vec3 lightDirection, vec3 lightColor)
+Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
 {
     float diffuseIntensity = 1.0;
     float specularIntensity = 2.0 + mMetallic*5.0;
@@ -115,7 +141,7 @@ Material getLighting(vec3 lightDirection, vec3 lightColor)
     return result;
 }
 #else
-Material getLighting(vec3 lightDirection, vec3 lightColor)
+Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
 {
     Material result;
     result.result = lightColor;
@@ -234,3 +260,11 @@ vec3 getStandardEmmisive(vec3 fcolor)
 
     return finalEmmisive;
 }
+
+Material getLighting(vec3 lightDirection, vec3 lightColor)
+{
+    return getLighting(lightDirection, lightColor, 0.);
+}
+
+
+#endif

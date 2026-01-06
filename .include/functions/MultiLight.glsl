@@ -1,9 +1,10 @@
- #include Ligths 
+#include Ligths 
 
 #include Noise 
 #include standardMaterial 
 
 vec3 lcalcPosition = vec3(0.0);
+vec3 lSunColor = vec3(1);
 
 /*
     Efficient soft-shadow with percentage-closer filtering
@@ -21,6 +22,31 @@ vec3 lcalcPosition = vec3(0.0);
 #define ESS_BASE_PENUMBRA_RADIUS 0.001
 #endif
 
+vec3 getClosestLightHit(sampler2D shadowmap, mat4 rMatrix, vec3 pos)
+{
+    vec4 mapPosition = rMatrix * vec4(pos, 1.0);
+    mapPosition.xyz /= mapPosition.w;
+    // mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
+
+    const float borderBias = 1e-3;
+
+    if (mapPosition.x < -1.0-borderBias || mapPosition.x > 1.0-borderBias ||
+        mapPosition.y < -1.0-borderBias || mapPosition.y > 1.0-borderBias)
+        return pos;
+
+    float res = 0.;
+    float bias = 0.00005;
+
+    vec2 samplePos = mapPosition.xy;
+    float d = texture(shadowmap, samplePos * .5 + .5).r;
+
+    vec4 shadowPos = vec4(mapPosition.xy, d, 1.0);
+
+    shadowPos = inverse(rMatrix) * shadowPos;
+    // shadowPos /= shadowPos.w;
+
+    return shadowPos.xyz;
+}
 
 #define EFFICIENT_SMOOTH_SHADOW
 float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
@@ -36,7 +62,7 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
         return 1.;
 
     float res = 0.;
-    float bias = 0.00002
+    float bias = 0.000025
 
         // * (1.0 - distance(nDotL, cos(PI*0.5)))
 
@@ -52,6 +78,10 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
     // bias /= 1.0 + nDotL;
     float radius = ESS_BASE_PENUMBRA_RADIUS; // 0.0015
 
+    vec3 scalcPosition = lcalcPosition - mod(lcalcPosition, vec3(0.0001));
+    // scalcPosition = lcalcPosition;
+    scalcPosition = vec3(1);
+
     #ifdef EFFICIENT_SMOOTH_SHADOW
         int it = ESS_BASE_ITERATION;
         int itPenumbra = ESS_PENUMBRA_ITERATION;
@@ -59,8 +89,10 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
 
         for (; i < it; i++)
         {
-            vec2 rand = vec2(gold_noise3(lcalcPosition, i), gold_noise3(lcalcPosition, -i));
+            // vec2 rand = vec2(gold_noise3(lcalcPosition, i), gold_noise3(lcalcPosition, -i));
             // vec2 rand = 0.5 - random2(position+i);
+            vec2 rand = vulpineHash3to2(scalcPosition, i)*2. - 1.;
+            rand = normalize(rand);
             vec2 samplePos = mapPosition.xy + 2.0 * radius * rand;
             float d = texture(shadowmap, samplePos).r;
             res += d - bias < mapPosition.z ? 1.0 : 0.0;
@@ -77,8 +109,10 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
 
             for (; i < itPenumbra; i++)
             {
-                vec2 rand = vec2(gold_noise3(lcalcPosition, i), gold_noise3(lcalcPosition, -i));
+                // vec2 rand = vec2(gold_noise3(lcalcPosition, i), gold_noise3(lcalcPosition, -i));
                 // vec2 rand = 0.5 - random2(position+i);
+                vec2 rand = vulpineHash3to2(scalcPosition, i)*2. - 1.;
+                rand = normalize(rand);
                 vec2 samplePos = mapPosition.xy + radius * rand;
                 float d = texture(shadowmap, samplePos).r;
                 res += d - bias < mapPosition.z ? 1.0 : 0.0;
@@ -89,7 +123,7 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
     #else
         res = texture(shadowmap, mapPosition.xy).r - bias < mapPosition.z ? 1.0 : 0.0;
     #endif
-
+    // res = 0.0;
     return res;
 }
 
@@ -105,12 +139,42 @@ void getLightDirectionnal(
 {
     if(intensity <= 1e-3) return;
 
-    lightResult = getLighting(direction, color);
+    float sss = 0.;
+
+    #ifdef SUBSURFACE_SCATTERING
+    float sssStep = 5.0;
+    if(!shadows)
+    for(float i = 0; i < sssStep; i++)
+    {
+        vec3 ssspos = lcalcPosition - 0.02*(vulpineHash2to3(vec2(1.), i)*2. - 1.);
+        vec3 SSSpos = getClosestLightHit(bShadowMaps[mapID], matrix, ssspos);
+        float SSSt = dot(-(SSSpos-lcalcPosition), direction);
+        SSSt = max(SSSt, 0.);
+
+        float radius = 0.05;
+        SSSt /= radius;
+        sss += clamp(exp(-SSSt), 0., 1.);
+    }
+    sss /= sssStep;
+    sss *= 0.5 + 0.5*(1.0-mMetallic);
+    sss *= mSubSurfaceScattering;
+    #endif
+
+    lightResult = getLighting(direction, color, sss);
     factor = shadows ? intensity : intensity*getShadow(bShadowMaps[mapID], matrix, dot(normalComposed, direction));
 
-    // sunLightMult += max(dot(-direction, normalComposed), 0);
-    sunLightMult += factor/intensity;
-    sunLightMult = min(sunLightMult , 1.0);
+    // sunLightMult = max(dot(-direction, normalComposed), 0);
+    // sunLightMult += factor;
+
+    sunLightMult = min(factor, max(dot(-direction, normalComposed) + 1.0, 0));
+
+    // sunLightMult = factor;
+
+    // sunLightMult = min(sunLightMult , 1.0);
+
+
+    // lightResult.result = sss.xxx;
+    // factor = 1.0;
 }
 
 void getLightPoint(
@@ -132,7 +196,7 @@ void getLightPoint(
 */
 
 #define GET_LIGHT_INIT \
-    Material result; result.result = vec3(.0); result.reflected = vec3(0.); \
+    Material result; result.result = vec3(.0); result.reflected = vec3(0.); result.specular = vec3(0.); \
     nDotV = max(dot(normalComposed, viewDir), 1e-6);
 
 
@@ -158,17 +222,20 @@ Material getMultiLight()
     r.reflected = vec3(.0);
     Light sun = lights[0];
     getLightDirectionnal(
-        r, factor, sun.direction.xyz, sun.color.rgb, sun.color.a, 
+        r, factor, sun.direction.xyz, lSunColor, sun.color.a, 
         (sun.infos.b % 2) == 0, sun.infos.r, sun.matrix);
     result.result += r.result*factor;
     result.reflected += r.reflected;
+    result.specular += r.specular*factor;
+    // sunLightMult += length(r.result)*factor;
 
-    Light moon = lights[1];
-    getLightDirectionnal(
-        r, factor, moon.direction.xyz, moon.color.rgb, moon.color.a, 
-        (moon.infos.b % 2) == 0, moon.infos.r, moon.matrix);
-    result.result += r.result*factor;
-    result.reflected += r.reflected;
+    // Light moon = lights[1];
+    // getLightDirectionnal(
+    //     r, factor, moon.direction.xyz, moon.color.rgb, moon.color.a, 
+    //     (moon.infos.b % 2) == 0, moon.infos.r, moon.matrix);
+    // result.result += r.result*factor*factor;
+    // result.reflected += r.reflected;
+    // result.specular += r.specular;
 
     ivec3 clusterId = getClusterId(vFarLighting, frustumClusterDim);
 
@@ -209,6 +276,7 @@ Material getMultiLight()
 
         result.result += r.result*factor;
         result.reflected += r.reflected;
+        result.specular += r.specular*factor;
     }
 
     return result;
@@ -224,7 +292,7 @@ Material getMultiLight()
     for(;;id++)
     {
         Light l = lights[id];
-        Material r; r.result = vec3(.0); r.reflected = vec3(0.0);
+        Material r; r.result = vec3(.0); r.reflected = vec3(0.0); r.specular = vec3(0.);
         float factor = 0.f;
 
         switch(l.infos.a)
@@ -243,6 +311,7 @@ Material getMultiLight()
 
         result.result += r.result*factor;
         result.reflected += r.reflected;
+        result.specular += r.specular*factor;
     }
 
     return result;

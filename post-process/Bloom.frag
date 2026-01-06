@@ -1,6 +1,6 @@
 #version 460
 
-layout (location = 0) uniform ivec2 iResolution;
+layout (location = 0) uniform ivec2 _iResolution;
 layout (location = 1) uniform float iTime;
 layout (location = 2) uniform mat4 MVP;
 layout (location = 3) uniform int pass;
@@ -127,13 +127,13 @@ vec3 blur2(sampler2D image)
 {
     vec4 FragmentColor;
 
-    FragmentColor = texture(image, vec2(gl_FragCoord) / iResolution) * weight[0];
+    FragmentColor = texture(image, vec2(gl_FragCoord) / _iResolution) * weight[0];
     for (int i=1; i<3; i++) {
         FragmentColor +=
-            texture(image, (vec2(gl_FragCoord) + vec2(0.0, offset[i])) / iResolution)
+            texture(image, (vec2(gl_FragCoord) + vec2(0.0, offset[i])) / _iResolution)
                 * weight[i];
         FragmentColor +=
-            texture(image, (vec2(gl_FragCoord) - vec2(0.0, offset[i])) / iResolution)
+            texture(image, (vec2(gl_FragCoord) - vec2(0.0, offset[i])) / _iResolution)
                 * weight[i];
     }
     return FragmentColor.rgb;
@@ -167,5 +167,5 @@ void main()
     // if(pass == 1) direction *= vec2(0.2, -0.75);
     // if(pass == 2) direction *= vec2(-0.96, 0.38);
 
-    // fragColor = 2.0 * blur13(bSource, uvScreen, vec2(iResolution), direction).rgb;
+    // fragColor = 2.0 * blur13(bSource, uvScreen, vec2(_iResolution), direction).rgb;
 }

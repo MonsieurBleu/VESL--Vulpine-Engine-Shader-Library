@@ -1,6 +1,6 @@
 #version 460
 
-layout (location = 0) uniform ivec2 iResolution;
+layout (location = 0) uniform ivec2 _iResolution;
 layout (location = 1) uniform float iTime;
 layout (location = 2) uniform mat4 MVP;
 layout (location = 4) uniform mat4 _cameraProjectionMatrix; 

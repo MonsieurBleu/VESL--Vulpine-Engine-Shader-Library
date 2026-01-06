@@ -1,6 +1,6 @@
 #version 460
 
-layout (location = 0) uniform ivec2 iResolution;
+layout (location = 0) uniform ivec2 _iResolution;
 layout (location = 1) uniform float iTime;
 layout (location = 2) uniform mat4 MVP;
 layout (location = 3) uniform mat4 _cameraViewMatrix;
@@ -44,7 +44,7 @@ vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
 }
 
 // tile noise texture over screen, based on screen dimensions divided by noise size
-vec2 noiseScale = vec2(float(iResolution.x)/4.0, float(iResolution.y)/4.0);
+vec2 noiseScale = vec2(float(_iResolution.x)/4.0, float(_iResolution.y)/4.0);
 
 int kernelSize = 32; // 64
 float radius = 0.3; // 5.0

@@ -21,9 +21,13 @@ layout (binding = 0) uniform sampler2D bTexture;
 layout (location = 32) uniform int skyboxType;
 
 #include Fragment3DInputs 
-#include Fragment3DOutputs 
-layout(location = 3) out vec3 fragMaterialPosition;
-layout(location = 4) out vec3 fragWorldPosition;
+//include Fragment3DOutputs 
+// layout(location = 3) out vec3 fragMaterialPosition;
+// layout(location = 4) out vec3 fragWorldPosition;
+// layout(location = 5) out vec4 fragMaterialProperty;
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec2 fragNormal;
+layout(location = 4) out vec3 fragMaterialPosition;
 layout(location = 5) out vec4 fragMaterialProperty;
 
 #include standardMaterial 
@@ -34,72 +38,32 @@ in vec3 viewPos;
 
 
 
+vec2 compressNormal(vec3 n)
+{
+    n /= (abs(n.x) + abs(n.y) + abs(n.z));
+
+    if (n.z < 0.0)
+        n.xy = (1.0 - abs(n.yx)) * sign(n.xy);
+
+    return n.xy*.5 + .5;
+}
 
 
 void main()
 {
-    vec3 dir = -normalize(normal);
-
-    switch(skyboxType)
-    {
-        case 1 : 
-            int it = 16;
-            for(int i = 0; i < it; i++)
-            {
-                vec3 r = dir + rand3to3(vec3(i) * 0.1 + abs(dir))*0.05;
-                fragColor.rgb += getAmbientInteriorColor(normalize(r));
-            }
-            fragColor.rgb /= it;
-            fragNormal = vec3(0);
-        break;
-
-        case 2  : fragColor.rgb = vec3(53,  49,  48)/255.;
-        fragNormal = vec3(1);
-        break;
-
-        case 3  : fragColor.rgb = vec3(242, 234,  222)/255.;
-        fragNormal = vec3(1);
-        break;
-
-        case 4  : fragColor.rgb = vec3(100, 175, 200)/255.;
-        fragNormal = vec3(1);
-        break;
-
-        case 5  : fragColor.rgb = vec3(0, 200, 0)/255.;
-        fragNormal = vec3(1);
-        break;
-
-        default : 
-        
-        // dir.y = clamp(dir.y, 0., 1.);
-        // dir = normalize(dir);
-
-        dir.y = abs(dir.y);
-        // getSkyColors(dir, fragColor.rgb, fragEmmisive.rgb);
-        fragColor.rgb = vec3(0.3, 0.60, 1.0);
-
-        // if(dir.y < 0)
-        // {
-        //     dir.y *= -1;
-        //     fragColor.rgb = clamp(getAtmopshereColor(dir), vec3(0), vec3(1));
-        // }
-        // else
-        // {
-        //     getSkyColors(dir, fragColor.rgb, fragEmmisive.rgb);
-        // }
-
-        fragNormal = vec3(0);
-        break;
-
-
-    }
-
+    fragNormal = compressNormal(normal);
     // fragColor.rgb = getAmbientInteriorColor(dir);
 
-    fragNormal = normal;
-    fragWorldPosition = position;
-    fragMaterialPosition = position/1000000.0;
+    // fragNormal = normal;
+    // fragWorldPosition = position;
+    // fragMaterialPosition = position/1000000.0;
+    // fragMaterialPosition = position*0.01;
+    fragMaterialPosition = vec3(0.0);
     fragMaterialProperty = vec4(-1.);
+
+    // fragColor.rgb = vec3(0, 0.5, 0.5);
+
+    fragColor.rgb = vec3(0);
 
     // fragMaterialPosition = vec3(1);
 

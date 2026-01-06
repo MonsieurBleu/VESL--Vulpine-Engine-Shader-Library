@@ -3,6 +3,17 @@
 
  #include Constants 
 
+/*
+    Source : https://www.shadertoy.com/view/43jSRR
+    On my rtx3070, as fast as vulpineHash, but not seedable
+    Infinite range
+*/
+float FiHash(vec2 p) {
+    uvec2 u = floatBitsToUint(p * vec2(141421356, 2718281828U));
+    return float((u.x ^ u.y) * 3141592653u) / float(~0u);
+}
+
+
 /* ###===== Vulpine Hash =====###
 *
 *   This is a hash function made to be :
@@ -17,6 +28,9 @@
 */
     float vulpineHash(vec2 uv, float seed)
     {
+        return FiHash(uv + seed*PI);
+
+
         uv = PI*50.0*fract(uv*E + 0.5) + uv*0.00007;    
         return fract(
                 (uv.x * uv.x * 0.001 * SQR2)
@@ -27,7 +41,11 @@
 
     float vulpineHash3D(vec3 uv, float seed)
     {
-        return vulpineHash(uv.xy + uv.zy + uv.xz, seed);
+        // return vulpineHash(uv.xy + uv.zy + uv.xz, seed);
+        return vulpineHash(vec2(
+            uv.x + cos(uv.y) - uv.z,
+            uv.y + cos(uv.z)
+        ), seed);
     }
 
     float vulpineHash2to1(vec2 uv, float seed)
@@ -94,14 +112,5 @@
         );
     }
 
-/*
-    Source : https://www.shadertoy.com/view/43jSRR
-    On my rtx3070, as fast as vulpineHash, but not seedable
-    Infinite range
-*/
-float FiHash(vec2 p) {
-    uvec2 u = floatBitsToUint(p * vec2(141421356, 2718281828U));
-    return float((u.x ^ u.y) * 3141592653u) / float(~0u);
-}
 
 #endif

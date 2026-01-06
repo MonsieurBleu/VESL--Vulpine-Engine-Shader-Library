@@ -19,6 +19,10 @@ float linearstep(float e0, float e1, float x)
     return clamp((x - e0)/(e1 - e0), 0., 1.);
 }
 
+vec3 linearstep(vec3 e0, vec3 e1, vec3 x)
+{
+    return clamp((x - e0)/(e1 - e0), 0., 1.);
+}
 
 float cubicstep(float edge0, float edge1, float x)
 {

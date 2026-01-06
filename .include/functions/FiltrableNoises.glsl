@@ -21,6 +21,14 @@ float derivativeLinear(vec2 uv)
     // return length(max(abs(dx), abs(dy)));
 }
 
+float derivativeLinear(vec3 uv)
+{
+    vec3 dy = dFdy(uv);
+    vec3 dx = dFdx(uv);
+    return length(dx) + length(dy);
+}
+
+
 /* Caculate a derivative of any variable similar to how OpenGL handles MipMaps
 *  Source : 
 *       https://web.archive.org/web/20231028013022/https://community.khronos.org/t/mipmap-level-calculation-using-dfdx-dfdy/67480
@@ -47,6 +55,7 @@ float derivative(vec3 uv)
     vec3 dx = dFdx(uv);
     return .5*max(0., 0.5 * log2(max(dot(dx, dx), dot(dy, dy)) - 1.0));
 }
+
 
 
 float derivativeSum(vec2 uv)

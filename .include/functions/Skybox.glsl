@@ -4,9 +4,9 @@
 #include Noise 
 
 #ifdef CUBEMAP_SKYBOX
-    layout (binding = 4) uniform samplerCube bSkyTexture; 
+    layout (binding = 10) uniform samplerCube bSkyTexture; 
 #else
-    layout (binding = 4) uniform sampler2D bSkyTexture;
+    layout (binding = 10) uniform sampler2D bSkyTexture;
 #endif
 
 
@@ -112,7 +112,7 @@ rayTraceOut sphereIntersect(vec3 origin, vec3 direction, vec3 center, float radi
 
 #define IN_STEPS 24
 // at least 2 steps (or we get very wrong results) but 3 is better
-#define OUT_STEPS 2
+#define OUT_STEPS 3
 
 
 // Constants from https://www.shadertoy.com/view/wlBXWK
