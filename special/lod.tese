@@ -70,6 +70,8 @@ void main()
         vec2 hUv = uv*lodHeightDispFactors.z;
         float h = texture(bHeight, clamp(hUv, 0.001, 0.999)).r;
 
+        // h = texelFetch(bHeight, ivec2(clamp(hUv, 0.001, 0.999)*8196), 0).r;
+
     #ifdef USING_TERRAIN_RENDERING
         terrainHeight = h;
         terrainUv = hUv;
@@ -130,7 +132,7 @@ void main()
 
         // float dist = 2.0 * bias / lodHeightDispFactors.w;
         // dist *= 0.1;
-        float dist = bias * 0.5 * (4096.0/384);
+        float dist = bias * 0.5 * (4096.0/384) * 0.5;
         vec3 nP1 = normal*h; 
         vec3 nP2 = normal*h3 + vec3(0.0, 0.0, dist); 
         vec3 nP3 = normal*h1 + vec3(dist, 0.0, 0.0); 

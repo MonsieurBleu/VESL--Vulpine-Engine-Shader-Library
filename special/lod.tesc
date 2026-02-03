@@ -109,7 +109,7 @@ void main()
             tessDist[i] *= 0.5 + 0.5*smoothstep(0., 0.1, diffSum);
             tessDist[i] = clamp(tessDist[i] + diffSum*0.8, 0., 1.);
 
-            gl_TessLevelOuter[i] = max(1, round(tessDist[i]*48));
+            gl_TessLevelOuter[i] = max(1, round(tessDist[i]*64))*2;
         }
         
         gl_TessLevelInner[0] = min(gl_TessLevelOuter[0], min(gl_TessLevelOuter[1], gl_TessLevelOuter[2]));
