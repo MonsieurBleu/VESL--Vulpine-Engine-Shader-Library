@@ -28,7 +28,7 @@ viewVector = _cameraPosition - position;
 #endif
 
 
-#ifdef DO_FAKE_PLANET_CURVATURE__
+#ifdef DO_FAKE_PLANET_CURVATURE
 {
     #define BASE_SIZE 8192 * 2.
     #ifdef IN_SKYBOX_MESH

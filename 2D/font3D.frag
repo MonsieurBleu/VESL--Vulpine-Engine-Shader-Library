@@ -38,5 +38,5 @@ void main() {
     fragColor.rgb = bColor.rgb;
     fragEmmisive = vec3(0);
 
-    fragNormal = vec3(1.0);
+    fragNormal = vec3(0.0);
 }

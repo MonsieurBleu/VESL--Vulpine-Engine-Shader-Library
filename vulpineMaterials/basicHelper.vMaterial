@@ -1,6 +1,12 @@
-basicHelper
+~
 :   basicHelper
-    :   shader/foward/basic.frag
-    :   shader/foward/basic.vert
+    :   uniforms 3D
+    :   frag basic 
+    :   vert basic 
+    ;
+:   basicHelperDepthOnly
+    :   uniforms 3D
+    :   frag depthOnly
+    :   vert basic 
     ;
 ;
