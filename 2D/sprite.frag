@@ -19,7 +19,8 @@ void main()
     vec2 ascale = scale;
     // auv.y /= float(_iResolution.x)/float(_iResolution.y);
 
-    // auv.y *= tSize.x/tSize.y;
+    auv.y *= tSize.x/tSize.y;
+    auv.y += 0.5*(1.f-tSize.x/tSize.y);
 
     ascale.y /= float(_iResolution.x)/float(_iResolution.y);
 
@@ -56,4 +57,7 @@ void main()
         discard;
     
     if(fragColor.a == 0.f) discard;
+
+    // fragColor.a = 0.5;
+
 }

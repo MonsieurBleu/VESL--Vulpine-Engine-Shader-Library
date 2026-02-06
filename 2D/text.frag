@@ -3,6 +3,8 @@
  #include Base3D 
  #include Model3D 
 
+#include HSV
+
 layout (location = 0) out vec4 fragColor;
 layout (binding = 0) uniform sampler2D bAtlas;
 
@@ -20,7 +22,13 @@ void main()
     vec3 bodyColor = _textColor.rgb;
 
     // bodyColor = bold > 0 ? bodyColor*vec3(0.5, 1.4, 2.5) : bodyColor;
-    bodyColor = bold > 0 ? bodyColor*vec3(0.75, 0.75, 0.75) : bodyColor;
+    // bodyColor = bold > 0 ? bodyColor*vec3(0.75, 0.75, 0.75) : bodyColor;
+
+    vec3 boldColor = rgb2hsv(bodyColor);
+    boldColor.g = 1.0 - boldColor.g;
+    // boldColor.r = 1.0 - boldColor.r;
+    boldColor = hsv2rgb(boldColor);
+    bodyColor = bold > 0 ? boldColor : bodyColor;
 
     vec3 outlineColor = italic > 0 ? bodyColor*0.2 : bodyColor*0.4;
 
