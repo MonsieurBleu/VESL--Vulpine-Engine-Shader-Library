@@ -8,14 +8,17 @@
 layout (triangles, equal_spacing, ccw) in;
 // layout (triangles, fractional_even_spacing, ccw) in;
 
-#define USING_VERTEX_TEXTURE_UV
+// #define USING_VERTEX_TEXTURE_UV
 #define USING_LOD_TESSELATION
+#define USING_VERTEX_PACKING
 
 #include Base3D 
 #include Model3D 
 #include Vertex3DOutputs 
 
 #include Noise 
+#include HSV
+#include Hash
 
 in vec2 patchUv[];
 in vec3 patchPosition[];
@@ -34,6 +37,22 @@ in vec3 patchNormal[];
 out vec2 terrainUv;
 out float terrainHeight;
 out vec3 modelPosition;
+#endif
+
+
+#ifdef USING_VERTEX_PACKING
+
+out float vEmmisive;
+out float vRoughness;
+out float vMetalness;
+
+out float vPaperness;
+out float vStreaking;
+out float vBloodyness;
+out float vDirtyness;
+
+// out vec2 uv;
+
 #endif
 
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec3 coord)
@@ -58,7 +77,7 @@ void main()
     vec3 hTessCoord = gl_TessCoord;
     vec3 p1 = patchPosition[0]; vec3 p2 = patchPosition[1]; vec3 p3 = patchPosition[2];  
 
-    uv = interpolate2D(patchUv[0], patchUv[1], patchUv[2], hTessCoord);
+    vec2 uv = interpolate2D(patchUv[0], patchUv[1], patchUv[2], hTessCoord);
     vec3 normalG = normalize(interpolate3D(patchNormal[0], patchNormal[1], patchNormal[2], hTessCoord));
     normal = normalG;
     vec3 positionInModel = interpolate3D(p1, p2, p3, hTessCoord);
@@ -70,12 +89,12 @@ void main()
         vec2 hUv = uv*lodHeightDispFactors.z;
         float h = texture(bHeight, clamp(hUv, 0.001, 0.999)).r;
 
-        // h = texelFetch(bHeight, ivec2(clamp(hUv, 0.001, 0.999)*8196), 0).r;
+        // h = texelFetch(bHeight, ivec2(clamp(hUv, 0.001, 0.999)*4096), 0).r;
 
-    #ifdef USING_TERRAIN_RENDERING
-        terrainHeight = h;
-        terrainUv = hUv;
-    #endif
+        #ifdef USING_TERRAIN_RENDERING
+            terrainHeight = h;
+            terrainUv = hUv;
+        #endif
 
         float a[6] = float[6](0.1, 0.6, -0.25, -0.48, 0.25, -0.9);
 
@@ -111,6 +130,7 @@ void main()
 
         // positionInModel += normalG*(h-0.5)*lodHeightDispFactors.w;
         positionInModel += normalG*(h);
+        // positionInModel.y += h;
 
         slope = clamp(slope, 0, 1);
         slope = pow(slope, 1.0);
@@ -167,28 +187,86 @@ void main()
     */
 
 
+    
+
+
     modelPosition = positionInModel;
 
     mat4 modelMatrix = _modelMatrix;
 
-     #include SetVertex3DOutputs 
-     
-    /*
-        Tmp curvature
-    */
-    // {
-    //     const float planetSize = 8192 * 8.;
+    #include SetVertex3DOutputs 
 
-    //     float d = distance(position.xz, _cameraPosition.xz)/planetSize;
- 
-    //     d = sin(acos(d));
 
-    //     d -= 1.;
-    //     d *= planetSize;
+    // position -= normal*0.5 * vec3(1, 0, 1);
 
-    //     position.y += d;
-    // }
 
+    vec4 factors = getTerrainFactorFromState(normal, terrainHeight);
+
+    vcolor = vec3(0);
+    const vec3 grassColor = hsv2rgb(vec3(0.20, 0.9, 0.3));
+    vcolor = mix(vcolor, grassColor, factors[2]); // grass
+
+    const vec3 dirtCOlor = hsv2rgb(vec3(0.1, 0.8, 0.2));
+    vcolor = mix(vcolor, dirtCOlor, factors[3]); // dirt
+
+    const vec3 rockColor = vec3(0xB4, 0xA1, 0x6E)/255.0;
+    vcolor = mix(vcolor, rockColor, factors[1]); // rocks
+
+    const vec3 snowColor = vec3(0xD0, 0xD0, 0xff)/255.0;
+    vcolor = mix(vcolor, snowColor, factors[0]); // snow
+
+
+    vRoughness = 0.f;
+    vRoughness = mix(vRoughness, 0.6, factors[2]);
+    vRoughness = mix(vRoughness, 0.75, factors[3]);
+    vRoughness = mix(vRoughness, 0.5, factors[1]);
+    vRoughness = mix(vRoughness, 0.75, factors[0]);
+
+    vMetalness = 0.0;
+
+
+    bool doDetailedTerrain = true;
+    float dtd = smoothstep(128.0, 32.0, distance(_cameraPosition, position));
+    doDetailedTerrain = dtd > 0.001;
+    // doDetailedTerrain = false; 
+
+    if(doDetailedTerrain)
+    {
+        float sn = snoise(position*0.25);
+        sn += snoise(position - 50.0)*0.5;
+
+        vcolor = mix(dirtCOlor, vcolor, factors[2]*smoothstep(1., -1., sn-1.0+dtd-factors[1]));
+        vcolor = mix(vcolor, rockColor, 0.25*factors[2]*smoothstep(0.5, 0.9, sn-1.0+dtd));
+
+        // sn *= 1.0-factors[1]*0.75;
+
+        position -= dtd*normal*sn*0.25;
+
+        // float vh = vulpineHash(position.xz, 0.0);
+        // float vh = snoise(position*5.0 - 50.0)*0.5 + 0.5;
+        
+
+        /* Trying to make rocks */
+        float sn2 = snoise(position*0.5 + 5.0);
+        // float rockStep = 0.8;
+        // float smallRockAlpha = smoothstep(rockStep+0.01, rockStep, sn2);
+
+        // smallRockAlpha += factors[1]*2.0;
+        // smallRockAlpha = clamp(smallRockAlpha, 0.0, 1.0);
+
+        // vcolor = mix(rockColor, vcolor, smallRockAlpha);
+        // vRoughness = mix(vRoughness, 0.5, vRoughness);
+
+        // position += 0.25*normal*(1.0-smallRockAlpha)*(0.5+0.5*vh);
+
+
+        vcolor = hsv2rgb(rgb2hsv(vcolor) * (1.0 + dtd*2.0*sn2*vec3(0.01, -0.1, 0.1)));
+    }
+
+    #ifdef USING_LAYERED_RENDERING
+    gl_Position = vec4(position, 1.0);
+    #else
     gl_Position = _cameraMatrix * vec4(position, 1.0);
+    #endif
 }
 	

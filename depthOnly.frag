@@ -27,6 +27,20 @@
     in vec3 modelNormal;
 #endif
 
+// #ifdef LEAF
+//     #ifdef ARB_BINDLESS_TEXTURE
+//         layout (location = 20, bindless_sampler) uniform sampler2D bLeaf;
+//     #else
+//         layout(binding = 0) uniform sampler2D bLeaf;
+//     #endif
+
+//     in vec2 uv;
+// #endif
+
 void main()
 {
+    return;
+    // #ifdef LEAF_ALPHA
+    // if(texture(bLeaf, clamp(uv, vec2(0), vec2(1))).r < 1e-6) discard;
+    // #endif
 }

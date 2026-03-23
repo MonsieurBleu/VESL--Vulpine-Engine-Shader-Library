@@ -4,7 +4,7 @@
 #include Noise 
 
 layout(location = 0) uniform ivec2 iResolution;
-layout(location = 1) uniform float iTime;
+layout(location = 1) uniform float _iTime;
 layout(location = 2) uniform mat4 MVP;
 
 layout(location = 10) uniform int bloomEnable;

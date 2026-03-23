@@ -22,7 +22,7 @@ vec3 lSunColor = vec3(1);
 #define ESS_BASE_PENUMBRA_RADIUS 0.001
 #endif
 
-vec3 getClosestLightHit(sampler2D shadowmap, mat4 rMatrix, vec3 pos)
+vec3 getClosestLightHit(sampler2DArray shadowmap, mat4 rMatrix, vec3 pos)
 {
     vec4 mapPosition = rMatrix * vec4(pos, 1.0);
     mapPosition.xyz /= mapPosition.w;
@@ -38,7 +38,7 @@ vec3 getClosestLightHit(sampler2D shadowmap, mat4 rMatrix, vec3 pos)
     float bias = 0.00005;
 
     vec2 samplePos = mapPosition.xy;
-    float d = texture(shadowmap, samplePos * .5 + .5).r;
+    float d = texture(shadowmap, vec3(samplePos * .5 + .5, 0)).r;
 
     vec4 shadowPos = vec4(mapPosition.xy, d, 1.0);
 
@@ -49,7 +49,7 @@ vec3 getClosestLightHit(sampler2D shadowmap, mat4 rMatrix, vec3 pos)
 }
 
 #define EFFICIENT_SMOOTH_SHADOW
-float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
+float getShadow(sampler2DArray shadowmap, mat4 rMatrix, float nDotL)
 {
     vec4 mapPosition = rMatrix * vec4(lcalcPosition, 1.0);
     mapPosition.xyz /= mapPosition.w;
@@ -59,7 +59,10 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
 
     if (mapPosition.x < borderBias || mapPosition.x > 1.0-borderBias ||
         mapPosition.y < borderBias || mapPosition.y > 1.0-borderBias)
-        return 1.;
+        {
+            color = vec3(2, 0, 0);
+            // return 1.;
+        }
 
     float res = 0.;
     float bias = 0.000025
@@ -94,7 +97,7 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
             vec2 rand = vulpineHash3to2(scalcPosition, i)*2. - 1.;
             rand = normalize(rand);
             vec2 samplePos = mapPosition.xy + 2.0 * radius * rand;
-            float d = texture(shadowmap, samplePos).r;
+            float d = texture(shadowmap, vec3(samplePos, 0)).r;
             res += d - bias < mapPosition.z ? 1.0 : 0.0;
         }
 
@@ -114,18 +117,131 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix, float nDotL)
                 vec2 rand = vulpineHash3to2(scalcPosition, i)*2. - 1.;
                 rand = normalize(rand);
                 vec2 samplePos = mapPosition.xy + radius * rand;
-                float d = texture(shadowmap, samplePos).r;
+                float d = texture(shadowmap, vec3(samplePos, 0)).r;
                 res += d - bias < mapPosition.z ? 1.0 : 0.0;
             }
         }
 
         res /= float(i);
     #else
-        res = texture(shadowmap, mapPosition.xy).r - bias < mapPosition.z ? 1.0 : 0.0;
+        res = texture(shadowmap, vec3(mapPosition.xy, 0)).r - bias < mapPosition.z ? 1.0 : 0.0;
     #endif
     // res = 0.0;
     return res;
 }
+
+float getShadowMapHit(in out float dist, sampler2DArray shadowmap,vec3 mapPosition, int layer, float bias, float randRadius, float it, float randSeed)
+{
+    vec2 samplePos = mapPosition.xy + randRadius * (0.5-vulpineHash2to2(it.xx, randSeed));
+    float d = texture(shadowmap, vec3(samplePos, layer)).r;
+    dist = abs(d-mapPosition.z);
+    return d - bias < mapPosition.z ? 1.0 : 0.0;
+}
+
+float getCascadedShadow_old(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
+{
+    float res = 0.0;
+
+    float res2 = 0.0;
+
+    for(int l = 0; l < LIGHT_LAYERS; l++)
+    {
+        vec4 mapPosition = matrix[l] * vec4(lcalcPosition, 1.0);
+        mapPosition.xyz /= mapPosition.w;
+        mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
+
+        const float borderBias = 1e-2;
+
+        if (
+                mapPosition.x < borderBias || mapPosition.x > 1.0-borderBias ||
+                mapPosition.y < borderBias || mapPosition.y > 1.0-borderBias ||
+                mapPosition.z < 0.0        || mapPosition.z > 1.0
+            )
+            {
+                // color = vec3(2, 0, 0);
+
+                continue;
+            }
+            
+        vec3 mult = vec3(0);
+        mult[l] = 2.0;
+
+        float borderD = max(
+            distance(mapPosition.x, 0.5),
+            distance(mapPosition.y, 0.5)
+        );
+
+        mult *= smoothstep(0.35, 0.5, borderD);
+
+        color = mult*10.0;
+
+        float bias = 1e-5 * (1.0 + float(l)*5.0 - (1.0-abs(nDotL*3.0)));
+        bias = clamp(bias, 0.0, 1.0);
+        float randRadius = ESS_BASE_PENUMBRA_RADIUS / (1.0 + 1.0*pow(2.0, float(l)));
+
+        float dist = 0;
+        for(int i = 0; i < ESS_BASE_ITERATION; i++)
+        {
+            float currentRandRadius = randRadius * (1.0 + min(dist*5000, 64.0));
+            // float currentRandRadius = randRadius;
+            res += getShadowMapHit(dist, shadowmap, mapPosition.xyz, l, bias, currentRandRadius, float(i), 0.0);
+        
+            // if(i == 0) res = 0;
+        }
+
+        res /= ESS_BASE_ITERATION;
+
+
+        return res;
+    }
+
+    // color *= 0.5;
+
+    return 1.0;
+}
+
+float getCascadedShadow(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
+{
+    float res = 0.0;
+
+    for(int l = 0; l < LIGHT_LAYERS; l++)
+    {
+        vec4 mapPosition = matrix[l] * vec4(lcalcPosition, 1.0);
+        mapPosition.xyz /= mapPosition.w;
+        mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
+
+        const float borderBias = 1e-2;
+
+        if (
+                mapPosition.x < borderBias || mapPosition.x > 1.0-borderBias ||
+                mapPosition.y < borderBias || mapPosition.y > 1.0-borderBias ||
+                mapPosition.z < 0.0        || mapPosition.z > 1.0
+            )
+            {
+                // color = vec3(2, 0, 0);
+
+                continue;
+            }
+    
+        float bias = 1e-5 * (1.0 + float(l)*5.0 - (1.0-abs(nDotL*3.0)));
+        bias = clamp(bias, 0.0, 1.0);
+        float randRadius = ESS_BASE_PENUMBRA_RADIUS / (1.0 + 1.0*pow(2.0, float(l)));
+
+        float dist = 1;
+        for(int i = 0; i < ESS_BASE_ITERATION; i++)
+        {
+            float currentRandRadius = randRadius * (1.0 + min(dist*5000, 64.0));
+            // float currentRandRadius = randRadius;
+            res += getShadowMapHit(dist, shadowmap, mapPosition.xyz, l, bias, currentRandRadius, float(i), 0.0);
+        }
+
+        res /= ESS_BASE_ITERATION;
+        return res;
+    }
+
+    return 1.0;
+}
+
 
 void getLightDirectionnal(
     inout Material lightResult, 
@@ -135,7 +251,7 @@ void getLightDirectionnal(
     in float intensity, 
     in bool shadows,
     in int mapID,
-    in mat4 matrix)
+    in mat4 matrix[3])
 {
     if(intensity <= 1e-3) return;
 
@@ -147,7 +263,7 @@ void getLightDirectionnal(
     for(float i = 0; i < sssStep; i++)
     {
         vec3 ssspos = lcalcPosition - 0.02*(vulpineHash2to3(vec2(1.), i)*2. - 1.);
-        vec3 SSSpos = getClosestLightHit(bShadowMaps[mapID], matrix, ssspos);
+        vec3 SSSpos = getClosestLightHit(bShadowMaps[mapID], matrix[0], ssspos);
         float SSSt = dot(-(SSSpos-lcalcPosition), direction);
         SSSt = max(SSSt, 0.);
 
@@ -161,7 +277,9 @@ void getLightDirectionnal(
     #endif
 
     lightResult = getLighting(direction, color, sss);
-    factor = shadows ? intensity : intensity*getShadow(bShadowMaps[mapID], matrix, dot(normalComposed, direction));
+    // factor = shadows ? intensity : intensity*getShadow(bShadowMaps[mapID], matrix[0], dot(normalComposed, direction));
+    factor = shadows ? intensity : intensity*getCascadedShadow(bShadowMaps[mapID], matrix, dot(normalComposed, direction));
+
 
     // sunLightMult = max(dot(-direction, normalComposed), 0);
     // sunLightMult += factor;
@@ -220,13 +338,20 @@ Material getMultiLight()
     Material r;
     r.result = vec3(.0);
     r.reflected = vec3(.0);
-    Light sun = lights[0];
-    getLightDirectionnal(
-        r, factor, sun.direction.xyz, lSunColor, sun.color.a, 
-        (sun.infos.b % 2) == 0, sun.infos.r, sun.matrix);
-    result.result += r.result*factor;
-    result.reflected += r.reflected;
-    result.specular += r.specular*factor;
+
+    for(int i = 0; i < 1; i++)
+    {
+        // i = 0;
+        Light sun = lights[i];
+        getLightDirectionnal(
+            r, factor, sun.direction.xyz, lSunColor, sun.color.a, 
+            (sun.infos.b % 2) == 0, sun.infos.r, sun.matrix);
+        result.result += r.result*factor;
+        result.reflected += r.reflected;
+        result.specular += r.specular*factor;
+    }
+
+
     // sunLightMult += length(r.result)*factor;
 
     // Light moon = lights[1];

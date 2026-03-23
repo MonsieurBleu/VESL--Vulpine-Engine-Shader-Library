@@ -30,22 +30,14 @@ viewVector = _cameraPosition - position;
 
 #ifdef DO_FAKE_PLANET_CURVATURE
 {
-    #define BASE_SIZE 8192 * 2.
     #ifdef IN_SKYBOX_MESH
-    const float planetSize = BASE_SIZE * 64 * 4.;
+    const float planetSize = PLANET_SIZE * 64 * 4.;
     #else
-    const float planetSize = BASE_SIZE;
+    const float planetSize = PLANET_SIZE;
     #endif
 
-    float d = distance(position.xz, _cameraPosition.xz)/planetSize;
-
-    d = sin(acos(d));
-
-    d -= 1.;
-    d *= planetSize;
-
-    if(abs(d) < 0.5) d = 0;
-
+    vec2 pc = position.xz - _cameraPosition.xz;
+    float d = planetSize * (sqrt(1.0 - dot(pc, pc)/(planetSize*planetSize)) - 1.0);
     position.y += d;
 
     #ifdef IN_SKYBOX_MESH

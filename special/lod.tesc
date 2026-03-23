@@ -69,9 +69,9 @@ void main()
         const float MIN_DISTANCE = 0;
         const float MAX_DISTANCE = 1024;
 
-        float worldDist00 = distance(vec3(_modelMatrix * vec4(patchPosition[0], 1.0)).xz, _cameraPosition.xz);
-        float worldDist01 = distance(vec3(_modelMatrix * vec4(patchPosition[1], 1.0)).xz, _cameraPosition.xz);
-        float worldDist10 = distance(vec3(_modelMatrix * vec4(patchPosition[2], 1.0)).xz, _cameraPosition.xz);
+        float worldDist00 = distance(vec3(_modelMatrix * vec4(vertexPos[0], 1.0)).xz, _cameraPosition.xz);
+        float worldDist01 = distance(vec3(_modelMatrix * vec4(vertexPos[1], 1.0)).xz, _cameraPosition.xz);
+        float worldDist10 = distance(vec3(_modelMatrix * vec4(vertexPos[2], 1.0)).xz, _cameraPosition.xz);
 
         vec3 depths = vec3(worldDist00, worldDist01, worldDist10);
         vec3 distances = clamp(1.-(depths-MIN_DISTANCE)/(MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0);
@@ -79,7 +79,7 @@ void main()
         vec3 tessDist = vec3( min(distances[1], distances[2]), min(distances[2], distances[0]), min(distances[0], distances[1]));
 
         
-        float snapVal = 4;
+        float snapVal = 6;
         tessDist = pow(tessDist, vec3(2.0));
         tessDist = ceil(tessDist*snapVal)/snapVal;
         tessDist = pow(tessDist, vec3(4.0));
@@ -96,20 +96,20 @@ void main()
             if(i == 2){j = 1; k = 0;}
 
             float diffSum = 0.;
-            float lastH = texture(bHeight, patchUv[j]).r;
+            float lastH = texture(bHeight, vertexUv[j]).r;
 
             for(float a = 0.; a <= 1.01f; a += 0.1)
             {
-                float h = texture(bHeight, mix(patchUv[j], patchUv[k], a)).r;
+                float h = texture(bHeight, mix(vertexUv[j], vertexUv[k], a)).r;
                 diffSum += distance(h, lastH);
                 lastH = h;
             }
             
             /* Slope Ajusted tesselation factor */
-            tessDist[i] *= 0.5 + 0.5*smoothstep(0., 0.1, diffSum);
-            tessDist[i] = clamp(tessDist[i] + diffSum*0.8, 0., 1.);
+            // tessDist[i] *= 0.5 + 0.5*smoothstep(0., 0.1, diffSum);
+            // tessDist[i] = clamp(tessDist[i] + diffSum*0.5, 0., 1.);
 
-            gl_TessLevelOuter[i] = max(1, round(tessDist[i]*64))*2;
+            gl_TessLevelOuter[i] = max(1, round(tessDist[i]*tessDist[i]*48));
         }
         
         gl_TessLevelInner[0] = min(gl_TessLevelOuter[0], min(gl_TessLevelOuter[1], gl_TessLevelOuter[2]));

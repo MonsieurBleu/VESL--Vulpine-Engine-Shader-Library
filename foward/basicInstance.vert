@@ -16,6 +16,6 @@ void main()
     mat4 modelMatrix = _instanceMatrix;
     vec3 positionInModel = _positionInModel;
     normal = _normal;
-     #include SetVertex3DOutputs 
+    #include SetVertex3DOutputs 
     gl_Position = _cameraMatrix * vec4(position, 1.0);
 };

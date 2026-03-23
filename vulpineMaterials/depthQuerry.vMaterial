@@ -1,0 +1,12 @@
+~
+:   depthQuery
+    :   uniforms 3D
+    :   frag depthOnly
+    :   vert basic 
+    ;
+:   depthQueryDepthOnly
+    :   uniforms 3D
+    :   frag depthOnly
+    :   vert basic 
+    ;
+;

@@ -1,10 +1,12 @@
+#define LIGHT_LAYERS 3
+
 struct Light
 {
     vec4 position;     
     vec4 color;         
     vec4 direction;       
     ivec4 infos;  
-    mat4 matrix;
+    mat4 matrix[LIGHT_LAYERS];
 };
 
 layout (std430, binding = 0) readonly buffer lightsBuffer 
@@ -25,6 +27,6 @@ layout (std430, binding = 0) readonly buffer lightsBuffer
 
 layout (location = 15) uniform vec3 ambientLight;
 
-layout (binding = 16) uniform sampler2D bShadowMaps[16];
+layout (binding = 16) uniform sampler2DArray bShadowMaps[16];
 
 
