@@ -130,74 +130,12 @@ float getShadow(sampler2DArray shadowmap, mat4 rMatrix, float nDotL)
     return res;
 }
 
-float getShadowMapHit(in out float dist, sampler2DArray shadowmap,vec3 mapPosition, int layer, float bias, float randRadius, float it, float randSeed)
+float getShadowMapHit(in out float dist, sampler2DArray shadowmap,vec3 mapPosition, int layer, float bias, float randRadius, vec2 it, float randSeed)
 {
-    vec2 samplePos = mapPosition.xy + randRadius * (0.5-vulpineHash2to2(it.xx, randSeed));
+    vec2 samplePos = mapPosition.xy + randRadius * normalize((0.5-vulpineHash2to2(it.xx, randSeed)));
     float d = texture(shadowmap, vec3(samplePos, layer)).r;
-    dist = abs(d-mapPosition.z);
+    dist = max(dist, abs(d-mapPosition.z));
     return d - bias < mapPosition.z ? 1.0 : 0.0;
-}
-
-float getCascadedShadow_old(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
-{
-    float res = 0.0;
-
-    float res2 = 0.0;
-
-    for(int l = 0; l < LIGHT_LAYERS; l++)
-    {
-        vec4 mapPosition = matrix[l] * vec4(lcalcPosition, 1.0);
-        mapPosition.xyz /= mapPosition.w;
-        mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
-
-        const float borderBias = 1e-2;
-
-        if (
-                mapPosition.x < borderBias || mapPosition.x > 1.0-borderBias ||
-                mapPosition.y < borderBias || mapPosition.y > 1.0-borderBias ||
-                mapPosition.z < 0.0        || mapPosition.z > 1.0
-            )
-            {
-                // color = vec3(2, 0, 0);
-
-                continue;
-            }
-            
-        vec3 mult = vec3(0);
-        mult[l] = 2.0;
-
-        float borderD = max(
-            distance(mapPosition.x, 0.5),
-            distance(mapPosition.y, 0.5)
-        );
-
-        mult *= smoothstep(0.35, 0.5, borderD);
-
-        color = mult*10.0;
-
-        float bias = 1e-5 * (1.0 + float(l)*5.0 - (1.0-abs(nDotL*3.0)));
-        bias = clamp(bias, 0.0, 1.0);
-        float randRadius = ESS_BASE_PENUMBRA_RADIUS / (1.0 + 1.0*pow(2.0, float(l)));
-
-        float dist = 0;
-        for(int i = 0; i < ESS_BASE_ITERATION; i++)
-        {
-            float currentRandRadius = randRadius * (1.0 + min(dist*5000, 64.0));
-            // float currentRandRadius = randRadius;
-            res += getShadowMapHit(dist, shadowmap, mapPosition.xyz, l, bias, currentRandRadius, float(i), 0.0);
-        
-            // if(i == 0) res = 0;
-        }
-
-        res /= ESS_BASE_ITERATION;
-
-
-        return res;
-    }
-
-    // color *= 0.5;
-
-    return 1.0;
 }
 
 float getCascadedShadow(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
@@ -211,7 +149,7 @@ float getCascadedShadow(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
         mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
 
         const float borderBias = 1e-2;
-
+        
         if (
                 mapPosition.x < borderBias || mapPosition.x > 1.0-borderBias ||
                 mapPosition.y < borderBias || mapPosition.y > 1.0-borderBias ||
@@ -223,19 +161,57 @@ float getCascadedShadow(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
                 continue;
             }
     
-        float bias = 1e-5 * (1.0 + float(l)*5.0 - (1.0-abs(nDotL*3.0)));
+        float bias = 1e-5 * (1.0 + float(l)*5.0 - (1.0-abs(nDotL*8.0)));
         bias = clamp(bias, 0.0, 1.0);
         float randRadius = ESS_BASE_PENUMBRA_RADIUS / (1.0 + 1.0*pow(2.0, float(l)));
 
-        float dist = 1;
+        float dist = 0.001;
+
+        const float maxDistPenubraFactor = 32.0;
+
         for(int i = 0; i < ESS_BASE_ITERATION; i++)
         {
-            float currentRandRadius = randRadius * (1.0 + min(dist*5000, 64.0));
-            // float currentRandRadius = randRadius;
-            res += getShadowMapHit(dist, shadowmap, mapPosition.xyz, l, bias, currentRandRadius, float(i), 0.0);
+            // float currentRandRadius = randRadius * (1.0 + min(dist*512.0, 128.0));
+            float currentRandRadius = randRadius*maxDistPenubraFactor;
+            vec2 ruv = vec2(0.5);
+            res += getShadowMapHit(dist, shadowmap, mapPosition.xyz, l, bias, currentRandRadius, ruv, float(i));
         }
 
         res /= ESS_BASE_ITERATION;
+
+        if(distance(res, 0.5) >= 0.4)
+        {
+            // color[2] = 300; 
+            // return res;
+        }
+        else
+            res = 0.0;
+
+        // dist = 0.01;
+        dist = smoothstep(0.001, 0.1, dist);
+        float currentRandRadius = randRadius * (1.0 + min(dist*256.0*maxDistPenubraFactor, maxDistPenubraFactor-1));
+        // currentRandRadius = randRadius*16.0;
+
+
+        // color[0] = currentRandRadius*256.0;
+        // color[0] = currentRandRadius/randRadius;
+
+        // float currentRandRadius = randRadius * (1.0 + min(dist*2048, 16.0));
+        for(int i = 0; i < ESS_PENUMBRA_ITERATION; i++)
+        {
+            
+            // float currentRandRadius = randRadius*16.0;
+            // vec2 ruv = mapPosition.zz - mod(mapPosition.zz, vec2(0.00001));
+            vec2 ruv = mapPosition.xy;
+            ruv = vec2(0.5);
+            res += getShadowMapHit(dist, shadowmap, mapPosition.xyz, l, bias, currentRandRadius, ruv, float(-i));
+        }
+
+
+        // res -= 64;
+        // res += 64;
+        res /= ESS_PENUMBRA_ITERATION;
+        res = smoothstep(0.0, 1.0, res);    
         return res;
     }
 
