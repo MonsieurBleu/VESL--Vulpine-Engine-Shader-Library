@@ -4,9 +4,11 @@
     :   frag basic 
     :   vert basic 
     ;
+*
 :   basicHelperDepthOnly
     :   uniforms 3D
     :   frag depthOnly
     :   vert basic 
     ;
+*
 ;

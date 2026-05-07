@@ -8,8 +8,10 @@
 
 #ifdef ARB_BINDLESS_TEXTURE
     layout (location = 22, bindless_sampler) uniform sampler2D bHeight;
+    layout (location = 23, bindless_sampler) uniform sampler2D bGrassyness;
 #else
     layout (binding = 2) uniform sampler2D bHeight;
+    layout (binding = 3) uniform sampler2D bGrassyness;
 #endif
 
 
@@ -109,7 +111,7 @@ void main()
             // tessDist[i] *= 0.5 + 0.5*smoothstep(0., 0.1, diffSum);
             // tessDist[i] = clamp(tessDist[i] + diffSum*0.5, 0., 1.);
 
-            gl_TessLevelOuter[i] = max(1, round(tessDist[i]*tessDist[i]*48));
+            gl_TessLevelOuter[i] = 2*max(1, round(tessDist[i]*tessDist[i]*48));
         }
         
         gl_TessLevelInner[0] = min(gl_TessLevelOuter[0], min(gl_TessLevelOuter[1], gl_TessLevelOuter[2]));

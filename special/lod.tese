@@ -28,8 +28,10 @@ in vec3 patchNormal[];
 
 #ifdef ARB_BINDLESS_TEXTURE
     layout (location = 22, bindless_sampler) uniform sampler2D bHeight;
+    layout (location = 23, bindless_sampler) uniform sampler2D bGrassyness;
 #else
     layout (binding = 2) uniform sampler2D bHeight;
+    layout (binding = 3) uniform sampler2D bGrassyness;
 #endif
 
 #ifdef USING_TERRAIN_RENDERING
@@ -202,21 +204,29 @@ void main()
 
     vec4 factors = getTerrainFactorFromState(normal, terrainHeight);
 
-    vcolor = vec3(0);
-    const vec3 grassColor = hsv2rgb(vec3(0.20, 0.9, 0.3));
-    vcolor = mix(vcolor, grassColor, factors[2]); // grass
+    float grassyness = texture(bGrassyness, 0.5 + position.xz/4096.0).r;
+    factors[2] *= smoothstep(0.0, 0.04, grassyness);
+    // factors[3] += 0.25*smoothstep(0.0, 0.25, grassyness);
 
     const vec3 dirtCOlor = hsv2rgb(vec3(0.1, 0.8, 0.2));
+    const vec3 dirtCOlor2 = hsv2rgb(vec3(0.1, 0.7, 0.4));
+    const vec3 grassColor = hsv2rgb(vec3(0.19, 1.0, 0.5));
+    const vec3 rockColor = vec3(0xB4, 0xA1, 0x6E)/255.0;
+    const vec3 snowColor = vec3(0xD0, 0xD0, 0xff)/255.0;
+
+    vcolor = dirtCOlor2;
+
+
+    vcolor = mix(vcolor, grassColor, factors[2]); // grass
+
     vcolor = mix(vcolor, dirtCOlor, factors[3]); // dirt
 
-    const vec3 rockColor = vec3(0xB4, 0xA1, 0x6E)/255.0;
     vcolor = mix(vcolor, rockColor, factors[1]); // rocks
 
-    const vec3 snowColor = vec3(0xD0, 0xD0, 0xff)/255.0;
     vcolor = mix(vcolor, snowColor, factors[0]); // snow
 
 
-    vRoughness = 0.f;
+    vRoughness = 1.f;
     vRoughness = mix(vRoughness, 0.6, factors[2]);
     vRoughness = mix(vRoughness, 0.75, factors[3]);
     vRoughness = mix(vRoughness, 0.5, factors[1]);
@@ -232,10 +242,30 @@ void main()
 
     if(doDetailedTerrain)
     {
-        float sn = snoise(position*0.25);
-        sn += snoise(position - 50.0)*0.5;
+        float sn = snoise(position*2.0 * 1.0)*0.5;
+        // sn += snoise(position - 50.0)*0.5;
+        float sn2 = snoise(position*0.5 + 5.0);
+        // sn *= abs(sn2);
+        // sn *= 1.5;
 
-        vcolor = mix(dirtCOlor, vcolor, factors[2]*smoothstep(1., -1., sn-1.0+dtd-factors[1]));
+
+
+        vcolor = mix(
+            dirtCOlor2, 
+            vcolor, 
+                factors[2]
+                *smoothstep(1., -1., 
+                    sn 
+                    
+                    -1.0+dtd-factors[1]
+
+                    + (1.0-grassyness)*0.5
+                    // - 0.5
+                    
+                    )
+            );
+
+
         vcolor = mix(vcolor, rockColor, 0.25*factors[2]*smoothstep(0.5, 0.9, sn-1.0+dtd));
 
         // sn *= 1.0-factors[1]*0.75;
@@ -247,7 +277,6 @@ void main()
         
 
         /* Trying to make rocks */
-        float sn2 = snoise(position*0.5 + 5.0);
         // float rockStep = 0.8;
         // float smallRockAlpha = smoothstep(rockStep+0.01, rockStep, sn2);
 
@@ -259,9 +288,14 @@ void main()
 
         // position += 0.25*normal*(1.0-smallRockAlpha)*(0.5+0.5*vh);
 
+        sn2 = sn*4.0;
 
-        vcolor = hsv2rgb(rgb2hsv(vcolor) * (1.0 + dtd*2.0*sn2*vec3(0.01, -0.1, 0.1)));
+
+        vcolor = hsv2rgb(rgb2hsv(vcolor) * (1.0 + dtd*2.0*sn*2.0*vec3(0.01, -0.1, 0.1)));
     }
+
+    
+    // vcolor = grassyness.rrr;
 
     #ifdef USING_LAYERED_RENDERING
     gl_Position = vec4(position, 1.0);

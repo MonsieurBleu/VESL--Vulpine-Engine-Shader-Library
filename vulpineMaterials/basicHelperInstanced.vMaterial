@@ -1,0 +1,22 @@
+~
+:   "Basic Helper Instanced"
+    :   uniforms 3D
+    :   frag basic 
+    :   vert basic 
+    :   directive
+        "
+            #define USING_INSTANCING
+        "
+    ;
+*
+:   basicHelperDepthOnly
+    :   uniforms 3D
+    :   frag depthOnly
+    :   vert basic 
+    :   directive
+        "
+            #define USING_INSTANCING
+        "
+    ;
+*
+;
