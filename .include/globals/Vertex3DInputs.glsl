@@ -19,6 +19,7 @@
 
 #ifdef USING_INSTANCING
     layout (location = 3) in mat4 _instanceMatrix;
+    layout (location = 7) in uvec4 _userData;
 #endif
 
 #ifdef USE_SKINNING 

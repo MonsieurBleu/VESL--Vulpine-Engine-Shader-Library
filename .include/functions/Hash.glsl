@@ -1,7 +1,7 @@
 #ifndef FUNCTIONS_HASH_GLSL
 #define FUNCTIONS_HASH_GLSL
 
- #include Constants 
+#include Constants 
 
 /*
     Source : https://www.shadertoy.com/view/43jSRR

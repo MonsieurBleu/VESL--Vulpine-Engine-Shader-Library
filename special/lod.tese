@@ -132,6 +132,7 @@ void main()
 
         // positionInModel += normalG*(h-0.5)*lodHeightDispFactors.w;
         positionInModel += normalG*(h);
+        // positionInModel += cos(length(positionInModel))*2.0 - 0.5;
         // positionInModel.y += h;
 
         slope = clamp(slope, 0, 1);
@@ -188,10 +189,6 @@ void main()
     }
     */
 
-
-    
-
-
     modelPosition = positionInModel;
 
     mat4 modelMatrix = _modelMatrix;
@@ -239,6 +236,14 @@ void main()
     float dtd = smoothstep(128.0, 32.0, distance(_cameraPosition, position));
     doDetailedTerrain = dtd > 0.001;
     // doDetailedTerrain = false; 
+
+    // position = position.zyx*vec3(-1, 1, 1);
+    // normal *= -1;
+    // position.xz += 256;
+    // vec3 cpos = vec3(inverse(_cameraViewMatrix) * vec4(0, 0, 0, 1));
+    // vec3 cpos = _cameraPosition;
+    // vcolor = vec3(distance(position, cpos).r, 0, 0);
+    // vcolor = position/2048.0;
 
     if(doDetailedTerrain)
     {
@@ -296,6 +301,7 @@ void main()
 
     
     // vcolor = grassyness.rrr;
+    
 
     #ifdef USING_LAYERED_RENDERING
     gl_Position = vec4(position, 1.0);

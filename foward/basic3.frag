@@ -9,8 +9,6 @@ layout (location = 20) uniform vec3 bColor;
 
 #include Base3D 
 #include Model3D 
-
-
 #include Ligths 
 
 
@@ -38,7 +36,7 @@ vec2 compressNormal(vec3 n)
 
 void main() {
     normalComposed = normal;
-    // normalComposed = gl_FrontFacing ? normalComposed : -normalComposed;
+    normalComposed = gl_FrontFacing ? normalComposed : -normalComposed;
     
     #ifndef USING_INSTANCING
     fragColor.rgb = bColor;
@@ -46,13 +44,13 @@ void main() {
     fragColor.rgb = vcolor;
     #endif
 
-    // ivec2 iuv = ivec2(gl_FragCoord);
+    ivec2 iuv = ivec2(gl_FragCoord);
 
     // if(iuv.x%2 == iuv.y%2) discard;
 
-    // const int gridSize = 2;
-    // float score = max(iuv.x%gridSize, iuv.y%gridSize);
-    // if(score < gridSize/2) discard;
+    const int gridSize = 2;
+    float score = max(iuv.x%gridSize, iuv.y%gridSize);
+    if(score < gridSize/2) discard;
 
     // fragColor.rgb = normal;
 
@@ -69,5 +67,5 @@ void main() {
     // fragNormal = vec2(normalComposed);
 
     // fragNormal = compressNormal(normalComposed);
-    // fragNormal = vec2(0);
+    fragNormal = vec2(0);
 }

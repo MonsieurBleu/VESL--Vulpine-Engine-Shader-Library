@@ -1,7 +1,7 @@
 ~
 :   basicHelper
     :   uniforms 3D
-    :   frag basic 
+    :   frag basic3
     :   vert basic 
     ;
 *

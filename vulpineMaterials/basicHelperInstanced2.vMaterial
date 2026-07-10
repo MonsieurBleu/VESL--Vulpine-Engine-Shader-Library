@@ -1,7 +1,7 @@
 ~
-:   "Basic Helper Instanced"
+:   "Basic Helper Instanced 2"
     :   uniforms 3D
-    :   frag basic3
+    :   frag basic2 
     :   vert basic 
     :   directive
         "
@@ -9,7 +9,7 @@
         "
     ;
 *
-:   basicHelperDepthOnly
+:   basicHelperDepthOnly2
     :   uniforms 3D
     :   frag depthOnly
     :   vert basic 

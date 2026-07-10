@@ -57,6 +57,10 @@ void main()
     vec3 fragColor = texture(bColor, uvScreen).rgb;
     
     vec3 tnormal = texture(gNormal, uvScreen).rgb;
+
+    // if(length(tnormal) < 0.1) discard;
+    // discard;
+    // return;
     
     if(min(distance(tnormal, vec3(1)), distance(tnormal, vec3(0))) < 0.1) discard;
 

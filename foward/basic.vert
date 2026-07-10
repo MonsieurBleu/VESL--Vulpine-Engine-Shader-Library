@@ -2,6 +2,12 @@
 
 // #define USING_VERTEX_TEXTURE_UV
 
+#ifdef USING_INSTANCING
+    #undef USING_VERTEX_TEXTURE_UV
+#else
+    #define USING_VERTEX_TEXTURE_UV
+#endif
+
 #include Base3D 
 #include Model3D 
 
@@ -23,10 +29,12 @@ void main()
     gl_Position = _cameraMatrix * vec4(position, 1.0);
 
     #ifdef USING_INSTANCING
-    vcolor = vec3(
-        fract(_instanceMatrix[0][0])*10.0,
-        fract(_instanceMatrix[1][1])*10.0,
-        fract(_instanceMatrix[2][2])*10.0
-    );
+    // vcolor = vec3(
+    //     fract(_instanceMatrix[0][0])*10.0,
+    //     fract(_instanceMatrix[1][1])*10.0,
+    //     fract(_instanceMatrix[2][2])*10.0
+    // );
+
+    vcolor = vec3(_userData)/256.0;
     #endif
 };
