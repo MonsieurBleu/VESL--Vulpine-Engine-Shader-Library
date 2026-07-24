@@ -90,8 +90,17 @@ void main()
     {
         vec2 hUv = uv*lodHeightDispFactors.z;
         float h = texture(bHeight, clamp(hUv, 0.001, 0.999)).r;
-
-        // h = texelFetch(bHeight, ivec2(clamp(hUv, 0.001, 0.999)*4096), 0).r;
+        // h = textureLod(bHeight, clamp(hUv, 0.001, 0.999), 0).r;
+        // h = 
+        //     (
+        //         texelFetch(bHeight, ivec2(round(clamp(hUv, 0.001, 0.999)*4096)), 0).r
+        //         // +
+        //         // texelFetch(bHeight, ivec2(clamp(hUv, 0.001, 0.999)*4096) + 1, 0).r
+        //         // +
+        //         // texelFetch(bHeight, ivec2(clamp(hUv, 0.001, 0.999)*4096) - 1, 0).r
+        //     )
+        //     /1.f
+        //     ;
 
         #ifdef USING_TERRAIN_RENDERING
             terrainHeight = h;
@@ -224,12 +233,14 @@ void main()
 
 
     vRoughness = 1.f;
-    vRoughness = mix(vRoughness, 0.6, factors[2]);
+    vRoughness = mix(vRoughness, 0.5, factors[2]);
     vRoughness = mix(vRoughness, 0.75, factors[3]);
-    vRoughness = mix(vRoughness, 0.5, factors[1]);
+    vRoughness = mix(vRoughness, 0.25, factors[1]);
     vRoughness = mix(vRoughness, 0.75, factors[0]);
 
-    vMetalness = 0.0;
+    // vRoughness = 0.0;
+
+    // vMetalness = 0.0;
 
 
     bool doDetailedTerrain = true;
@@ -248,11 +259,13 @@ void main()
     if(doDetailedTerrain)
     {
         float sn = snoise(position*2.0 * 1.0)*0.5;
-        // sn += snoise(position - 50.0)*0.5;
-        float sn2 = snoise(position*0.5 + 5.0);
+        // sn += snoise(position*8.0 - 50.0)*0.5;
+        // sn *=0.5;
+        float sn2 = snoise(position*0.5*2.0 + 5.0);
         // sn *= abs(sn2);
         // sn *= 1.5;
 
+        // sn2 = 0;
 
 
         vcolor = mix(
@@ -260,7 +273,7 @@ void main()
             vcolor, 
                 factors[2]
                 *smoothstep(1., -1., 
-                    sn 
+                    sn
                     
                     -1.0+dtd-factors[1]
 
@@ -272,10 +285,11 @@ void main()
 
 
         vcolor = mix(vcolor, rockColor, 0.25*factors[2]*smoothstep(0.5, 0.9, sn-1.0+dtd));
+        // vcolor = mix(vcolor, rockColor, 0.25*factors[2]*smoothstep(0.5, 0.9, sn2-1.0+dtd));
 
         // sn *= 1.0-factors[1]*0.75;
 
-        position -= dtd*normal*sn*0.25;
+        position -= dtd*normal*sn2*0.125*(1.0 + factors[1]*1.0);
 
         // float vh = vulpineHash(position.xz, 0.0);
         // float vh = snoise(position*5.0 - 50.0)*0.5 + 0.5;
@@ -293,14 +307,21 @@ void main()
 
         // position += 0.25*normal*(1.0-smallRockAlpha)*(0.5+0.5*vh);
 
-        sn2 = sn*4.0;
+        // sn2 = sn*4.0;
 
 
-        vcolor = hsv2rgb(rgb2hsv(vcolor) * (1.0 + dtd*2.0*sn*2.0*vec3(0.01, -0.1, 0.1)));
+        // vcolor = hsv2rgb(rgb2hsv(vcolor) * (1.0 + dtd*2.0*sn*2.0*vec3(0.01, -0.1, 0.1)));
+        vcolor = hsv2rgb(rgb2hsv(vcolor) * (1.0 + factors[1]*dtd*sn2*2.0*vec3(0.01, -0.1, -0.1)));
     }
 
     
     // vcolor = grassyness.rrr;
+
+    // position = vec3(0);
+    // position -= normal*0.5;
+
+    position.z -= 0.5;
+    position.x -= 0.5;
     
 
     #ifdef USING_LAYERED_RENDERING

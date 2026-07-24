@@ -38,7 +38,7 @@ viewVector = _cameraPosition - position;
 
     vec2 pc = position.xz - _cameraPosition.xz;
     float d = planetSize * (sqrt(1.0 - dot(pc, pc)/(planetSize*planetSize)) - 1.0);
-    position.y += d;
+    position.y += d * smoothstep(1, 5, d);
 
     #ifdef IN_SKYBOX_MESH
     position.y += 9e4;

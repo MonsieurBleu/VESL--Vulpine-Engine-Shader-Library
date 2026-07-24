@@ -16,15 +16,55 @@ vec3 viewDir = vec3(0.0);
 vec3 color = vec3(0.0);
 float nDotV = 0.0;
 
+vec3 lcalcPosition = vec3(0.0);
+
+vec3 worldNormal(vec2 uv);
+
 struct Material
 {
     vec3 result;
     vec3 reflected;
     vec3 specular;
+
+    float diffuse;
+    float nDotL;
 };
 
-#ifdef USE_PBR
+#ifdef CELL_SHADING
+vec4 cellShadingSeed = vec4(0);
 
+float cellShade(float x, float steps, float smoothness)
+{
+    x *= steps;
+    return mix(
+        floor(x)/steps,
+        ceil(x)/steps,
+        smoothstep(
+            0.5-smoothness,
+            0.5+smoothness,
+            fract(x)
+        )
+    );
+}
+
+vec3 cellShade(vec3 x, vec3 steps, float smoothness)
+{
+    x *= steps;
+    return mix(
+        floor(x)/steps,
+        ceil(x)/steps,
+        smoothstep(
+            vec3(0.5-smoothness),
+            vec3(0.5+smoothness),
+            fract(x)
+        )
+    );
+}
+
+#endif
+
+
+#ifdef USE_PBR
 
 Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
 {
@@ -37,28 +77,31 @@ Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
     // if(distance(abs(lightDirection), abs(viewDir)) <= 0.19)
     //     halfwayDir = vec3(0, 1, 0);
 
+
     float nDotH = max(dot(normalComposed, halfwayDir), 0.0);
     float nDotL = max(dot(normalComposed, -lightDirection), 0.0);
 
-    #ifdef USE_TOON_SHADING
-        // float tmp3 = 0.01;
-        // nDotL = smoothstep(tmp3, tmp3+0.01, nDotL);
+    vec3 fresnelSchlick = F0 + (1.0 - F0) * pow(1.0 - nDotH, 5.0);
 
-        // float tmp3 = 0.1; nDotL *= smoothstep(tmp3, tmp3+0.1, nDotL);
+    #ifdef CELL_SHADING 
 
-        // float tmp3 = 0.0; nDotL = smoothstep(tmp3, tmp3+0.5, nDotL);
+        float smoothness = 0.05 + 0.2*(1.0-mRoughness);
+        smoothness = 0.25;
 
-        // float tmp4 = (1.0-mRoughness);
-        // float tmp4 = 0.5;
-        // nDotH= smoothstep(tmp4, tmp4+0.01, nDotH);
+        nDotL += cellShadingSeed.x*0.1;
+        nDotL = max(nDotL, 0.0);
+        nDotL = cellShade(nDotL, 2, smoothness);
+        nDotL = pow(nDotL, 0.5);
 
-        // float tmp5 = 0.0;
-        // nDotV = smoothstep(tmp5, 0.85, nDotV);
+        // nDotH += cellShadingSeed.y*0.1;
+        fresnelSchlick += fresnelSchlick*cellShadingSeed.g;
+        fresnelSchlick = cellShade(fresnelSchlick*2.0, vec3(4), smoothness);
+
     #endif
 
     float nDotH2 = nDotH * nDotH;
 
-    vec3 fresnelSchlick = F0 + (1.0 - F0) * pow(1.0 - nDotH, 5.0);
+    
 
     float nDenom = (nDotH2 * (mRoughness2 - 1.0) + 1.0);
     float normalDistrib = mRoughness2 / (PI * nDenom * nDenom);
@@ -69,13 +112,17 @@ Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
 
     vec3 specular = fresnelSchlick * normalDistrib * geometry / max((4.0 * nDotV * nDotL), 0.00000001);
 
-    vec3 kD = (vec3(1.0) - fresnelSchlick) * (1.0 - mMetallic);
+    vec3 kD = max(vec3(0), (vec3(1.0) - fresnelSchlick)) * (1.0 - mMetallic);
 
     // kD += sss;
 
     vec3 diffuse = kD * color / PI;
     
     // diffuse = sss.xxx ;
+
+    #ifdef CELL_SHADING
+    specular = mix(specular, color*specular, 0.9);
+    #endif
     
     Material result;
     result.reflected = fresnelSchlick;
@@ -111,8 +158,46 @@ Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
 
     color = hsv2rgb(color);
 
-    result.result += sss.xxx * (1.0 - kD) * color * lightColor * 0.5;
-    // result.result *= 0.5;
+
+    vec3 sssColor = lightColor*color;
+
+    #ifdef CELL_SHADING
+    sssColor = rgb2hsv(sssColor);
+
+    sssColor += sss*vec3(-0.05 + cellShadingSeed.z*0.05, 0.4, 0.5);
+
+    sssColor = hsv2rgb(sssColor);
+
+    result.result += sss.xxx * pow(1.0 - kD, vec3(0.5)) * sssColor * 0.5;
+
+    // float rim = smoothstep(0.9, 1.0, nDotH);
+
+    #ifdef RIM_LIGHT
+    vec4 ndcNormal = vec4(normalComposed, 0.0)*_cameraViewMatrix*_cameraProjectionMatrix;
+
+    float d = 1.0/texture(bDepth, uvScreen).r;
+    float rimBias = 0.003*(1.0 - 0.75*linearstep(1, 2, d*0.005));
+    rimBias *= 1.0-cellShadingSeed.y;
+
+    vec2 uv2 = uvScreen + rimBias*ndcNormal.xy;
+    float d2 = 1.0/texture(bDepth, uv2).r;
+
+    float rimDepthScore = (0.1*distance(d, d2))/d;
+
+    float rim = clamp(rimDepthScore, 0., 1.);
+    rim *= smoothstep(0.0, 0.1, nDotL);
+
+    result.result += rim.rrr*mix(lightColor, color, 0.5);
+    #endif
+
+
+    // result.result = specular*10;
+
+    #else
+
+    result.result += sss.xxx * (1.0 - kD) * sssColor * 0.5;
+
+    #endif
 
     return result;
 }

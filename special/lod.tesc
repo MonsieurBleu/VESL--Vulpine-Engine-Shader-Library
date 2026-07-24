@@ -112,6 +112,8 @@ void main()
             // tessDist[i] = clamp(tessDist[i] + diffSum*0.5, 0., 1.);
 
             gl_TessLevelOuter[i] = 2*max(1, round(tessDist[i]*tessDist[i]*48));
+
+            // gl_TessLevelOuter[i] /= 2;
         }
         
         gl_TessLevelInner[0] = min(gl_TessLevelOuter[0], min(gl_TessLevelOuter[1], gl_TessLevelOuter[2]));
