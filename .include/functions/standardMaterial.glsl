@@ -17,6 +17,7 @@ vec3 color = vec3(0.0);
 float nDotV = 0.0;
 
 vec3 lcalcPosition = vec3(0.0);
+vec3 ssscalcPosition = vec3(0.0);
 
 vec3 worldNormal(vec2 uv);
 
@@ -164,7 +165,7 @@ Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
     #ifdef CELL_SHADING
     sssColor = rgb2hsv(sssColor);
 
-    sssColor += sss*vec3(-0.05 + cellShadingSeed.z*0.05, 0.4, 0.5);
+    sssColor += sss*vec3(-0.05 + cellShadingSeed.z*0.05, 0.3, 0.4);
 
     sssColor = hsv2rgb(sssColor);
 

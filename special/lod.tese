@@ -272,7 +272,7 @@ void main()
             dirtCOlor2, 
             vcolor, 
                 factors[2]
-                *smoothstep(1., -1., 
+                *smoothstep(1., -0., 
                     sn
                     
                     -1.0+dtd-factors[1]

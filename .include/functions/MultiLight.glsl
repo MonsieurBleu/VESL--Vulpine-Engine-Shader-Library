@@ -240,7 +240,7 @@ void getLightDirectionnal(
     if(!shadows)
     for(float i = 0; i < sssStep; i++)
     {
-        vec3 ssspos = lcalcPosition - 0.02*(vulpineHash2to3(vec2(1.), i)*2. - 1.);
+        vec3 ssspos = ssscalcPosition - 0.02*(vulpineHash2to3(vec2(1.), i)*2. - 1.);
 
         vec3 SSSpos;
         bool hit = false;
@@ -251,19 +251,22 @@ void getLightDirectionnal(
 
         if(!hit) break;
 
-        float SSSt = dot(-(SSSpos-lcalcPosition), direction);
+        float SSSt = dot(-(SSSpos-ssscalcPosition), direction);
         SSSt = max(SSSt, 0.);
 
-        // float radius = 0.05;
-        float radius = 0.005 * mSubSurfaceScattering;
+        // float radius = 0.01;
+        float radius = 0.025 * mSubSurfaceScattering;
         SSSt /= radius;
         sss += clamp(exp(-SSSt), 0., 1.);
+        // sss += SSSt;
     }
     sss /= sssStep;
-    sss *= 0.5 + 0.5*(1.0-mMetallic);
+    sss *= 0.75 + 0.25*(1.0-mMetallic);
     // sss *= mSubSurfaceScattering;
 
     // sss *= 10;
+
+    // sss = 0.0;
 
     // color = rgb2hsv(color);
 

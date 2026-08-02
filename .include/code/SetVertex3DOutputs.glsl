@@ -13,6 +13,10 @@ normal = normalize(modelMatrix * vec4(normal, 0.0)).rgb;
 position = (modelMatrix * vec4(positionInModel, 1.0)).rgb;
 viewVector = _cameraPosition - position;
 
+#ifdef USE_VERTEX_PACKING
+modelPosition *= vec3(length(vec3(modelMatrix[0])), length(vec3(modelMatrix[1])), length(vec3(modelMatrix[2])));
+#endif
+
 #ifndef IN_SKYBOX_MESH
 #define DO_FAKE_PLANET_CURVATURE
 #else
