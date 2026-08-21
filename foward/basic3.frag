@@ -49,8 +49,12 @@ void main() {
     // if(iuv.x%2 == iuv.y%2) discard;
 
     const int gridSize = 2;
-    float score = max(iuv.x%gridSize, iuv.y%gridSize);
+    int score = max(iuv.x%gridSize, iuv.y%gridSize);
     if(score < gridSize/2) discard;
+
+    // float score2 = vulpineHash3D(position, 0.)-0.5;
+    // score += score2*0.1;
+    // if(score < 1.0) discard;
 
     // fragColor.rgb = normal;
 
@@ -67,5 +71,6 @@ void main() {
     // fragNormal = vec2(normalComposed);
 
     // fragNormal = compressNormal(normalComposed);
+    // fragColor.rgb = bColor;
     fragNormal = vec2(0);
 }
