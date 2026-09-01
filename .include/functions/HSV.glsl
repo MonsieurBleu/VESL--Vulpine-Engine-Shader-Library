@@ -19,6 +19,13 @@ vec3 hsv2rgb(vec3 c)
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+float luminance(vec3 c)
+{
+    return dot(c, c);
+    // return length(c);
+    // return min(c.r, min(c.b, c.g));
+}
+
 float rgb2v(vec3 c)
 {
     return mix(c.b, c.g, step(c.b, c.g));
