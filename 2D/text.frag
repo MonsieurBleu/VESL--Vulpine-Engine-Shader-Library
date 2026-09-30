@@ -41,11 +41,11 @@ void main()
     // float opacity = smoothstep(-pxRange, pxRange*2, pxDist);
 
     float outer = smoothstep(-0.01, 0.15, dist);
-    float inner = smoothstep(0.0, 1.0, dist);
+    float inner = smoothstep(0.0, 0.65, dist);
 
     // bodyColor = mix(outlineColor, bodyColor, pow(inner, 1.0));
 
-    float opacity = outer;
+    float opacity = inner;
 
     // fragColor = vec4(dist, dist, dist, 1.0);
 

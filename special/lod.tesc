@@ -5,6 +5,7 @@
 
 #include Base3D 
 #include Model3D 
+#include Steps
 
 #ifdef ARB_BINDLESS_TEXTURE
     layout (location = 22, bindless_sampler) uniform sampler2D bHeight;
@@ -80,41 +81,92 @@ void main()
         
         vec3 tessDist = vec3( min(distances[1], distances[2]), min(distances[2], distances[0]), min(distances[0], distances[1]));
 
-        
-        float snapVal = 6;
-        tessDist = pow(tessDist, vec3(2.0));
-        tessDist = ceil(tessDist*snapVal)/snapVal;
-        tessDist = pow(tessDist, vec3(4.0));
+        vec3 unNormalizedDistances = vec3( min(depths[1], depths[2]), min(depths[2], depths[0]), min(depths[0], depths[1]));
 
-        // tessDist = vec3(0);
+        
+        // float snapVal = 8;
+        // tessDist = pow(tessDist, vec3(4.0));
+        // tessDist = ceil(tessDist*snapVal)/snapVal;
+        // tessDist = pow(tessDist, vec3(4.0));
+
+        // // tessDist = vec3(0);
+
+        // vec3 slope = vec3(0);
+
+        // for(int i = 0; i < 3; i++)
+        // {
+        //     int j = (i+1)%3;
+        //     int k = (i+2)%3;
+
+        //     if(i == 0){j = 1; k = 2;}
+        //     if(i == 1){j = 0; k = 2;}
+        //     if(i == 2){j = 1; k = 0;}
+
+        //     float diffSum = 0.;
+        //     float lastH = texture(bHeight, vertexUv[j]).r;
+
+        //     for(float a = 0.; a <= 1.01f; a += 0.1)
+        //     {
+        //         float h = texture(bHeight, mix(vertexUv[j], vertexUv[k], a)).r;
+        //         diffSum += distance(h, lastH);
+        //         lastH = h;
+        //     }
+
+        //     slope[i] += diffSum*32.0;
+            
+        // //     /* Slope Ajusted tesselation factor */
+        // //     // tessDist[i] *= 0.5 + 0.5*smoothstep(0., 0.1, diffSum);
+        // //     // tessDist[i] = clamp(tessDist[i] + diffSum*0.5, 0., 1.);
+
+        // //     gl_TessLevelOuter[i] = max(1, round(tessDist[i]*tessDist[i]*48));
+
+        // //     // gl_TessLevelOuter[i] /= 2;
+        // }
 
         for(int i = 0; i < 3; i++)
         {
-            int j = (i+1)%3;
-            int k = (i+2)%3;
+            // tessDist[i] = pow(tessDist[i], 3.0);
 
-            if(i == 0){j = 1; k = 2;}
-            if(i == 1){j = 0; k = 2;}
-            if(i == 2){j = 1; k = 0;}
+            // gl_TessLevelOuter[i] = max(1, round(tessDist[i]*48.0));
 
-            float diffSum = 0.;
-            float lastH = texture(bHeight, vertexUv[j]).r;
+            // gl_TessLevelOuter[i] -= mod(gl_TessLevelOuter[i], 4.0);
 
-            for(float a = 0.; a <= 1.01f; a += 0.1)
-            {
-                float h = texture(bHeight, mix(vertexUv[j], vertexUv[k], a)).r;
-                diffSum += distance(h, lastH);
-                lastH = h;
-            }
+            // gl_TessLevelOuter[i] = pow(gl_TessLevelOuter[i], 0.75);
+
+            // gl_TessLevelOuter[i] = max(2,  gl_TessLevelOuter[i]);
+
+
+            float level = 1;
+            float dist = unNormalizedDistances[i];
+
+
+            level = mix(level, 3.0,   step(dist, 1024.0));
+            level = mix(level, 6.0,   step(dist, 512.0));
+            level = mix(level, 12.0,  step(dist, 256.0));
+            level = mix(level, 24.0,  step(dist, 128.0));
+            level = mix(level, 48.0,  step(dist, 64.0));
             
-            /* Slope Ajusted tesselation factor */
-            // tessDist[i] *= 0.5 + 0.5*smoothstep(0., 0.1, diffSum);
-            // tessDist[i] = clamp(tessDist[i] + diffSum*0.5, 0., 1.);
+            // level = mix(level, 2.0,   step(dist, 1024.0));
+            // level = mix(level, 4.0,   step(dist, 256.0));
+            // level = mix(level, 8.0,   step(dist, 128.0));
+            // level = mix(level, 16.0,  step(dist, 64.0));
+            // level += pow(slope[i], 2.0)*step(dist, 2048.0)*16.0;
 
-            gl_TessLevelOuter[i] = 2*max(1, round(tessDist[i]*tessDist[i]*48));
+            // level = 0.5 * 64.0/(dist/64.0);
+            // level -= mod(level, 4.0);
+            // level ++;
 
-            // gl_TessLevelOuter[i] /= 2;
+            // level = mix(level, 16.0, linearstep(256.0, 128.0, dist));
+            // level = mix(level, 32.0, linearstep(128.0, 64.0, dist));
+            
+
+            // level += 4.0*linearstep(128.0, 64.0, dist);
+            // level += 4.0*linearstep(256.0, 128.0, dist);
+            // level += 4.0*linearstep(512.0, 256.0, dist);
+
+            gl_TessLevelOuter[i] = level;
         }
+
         
         gl_TessLevelInner[0] = min(gl_TessLevelOuter[0], min(gl_TessLevelOuter[1], gl_TessLevelOuter[2]));
     }

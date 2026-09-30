@@ -91,7 +91,7 @@ Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
 
         nDotL += cellShadingSeed.x*0.1;
         nDotL = max(nDotL, 0.0);
-        nDotL = cellShade(nDotL, 2, smoothness);
+        nDotL = cellShade(nDotL, 3, smoothness);
         nDotL = pow(nDotL, 0.5);
 
         // nDotH += cellShadingSeed.y*0.1;

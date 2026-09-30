@@ -133,7 +133,8 @@ float getShadow(sampler2DArray shadowmap, mat4 rMatrix, float nDotL)
 
 float getShadowMapHit(in out float dist, sampler2DArray shadowmap,vec3 mapPosition, int layer, float bias, float randRadius, vec2 it, float randSeed)
 {
-    vec2 samplePos = mapPosition.xy + randRadius * normalize((0.5-vulpineHash2to2(it.xx, randSeed)));
+    // vec2 samplePos = mapPosition.xy + randRadius * normalize((0.5-vulpineHash2to2(it.xx, randSeed)));
+    vec2 samplePos = mapPosition.xy + randRadius*it;
     float d = texture(shadowmap, vec3(samplePos, layer)).r;
     dist = max(dist, abs(d-mapPosition.z));
     return d - bias < mapPosition.z ? 1.0 : 0.0;
@@ -149,7 +150,14 @@ float getCascadedShadow(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
         mapPosition.xyz /= mapPosition.w;
         mapPosition.xy = mapPosition.xy * 0.5 + 0.5;
 
-        const float borderBias = 1e-2;
+        float randRadius = ESS_BASE_PENUMBRA_RADIUS / (1.0 + 1.0*pow(2.0, float(l*2)));
+        // float randRadius = ESS_BASE_PENUMBRA_RADIUS;
+
+        const float borderBias = 1e-2 + randRadius*4.0;
+
+        // const float distToBorder = max(distance(mapPosition.xy, vec2(1.0-borderBias)), distance(mapPosition.xy, vec2(borderBias)));
+        // randRadius += distToBorder*randRadius*10.0;
+
         
         if (
                 mapPosition.x < borderBias || mapPosition.x > 1.0-borderBias ||
@@ -164,7 +172,6 @@ float getCascadedShadow(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
     
         float bias = 1e-5 * (1.0 + float(l)*5.0 - (1.0-abs(nDotL*8.0)));
         bias = clamp(bias, 0.0, 1.0);
-        float randRadius = ESS_BASE_PENUMBRA_RADIUS / (1.0 + 1.0*pow(2.0, float(l)));
 
         float dist = 0.001;
 
@@ -173,24 +180,27 @@ float getCascadedShadow(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
         for(int i = 0; i < ESS_BASE_ITERATION; i++)
         {
             // float currentRandRadius = randRadius * (1.0 + min(dist*512.0, 128.0));
-            float currentRandRadius = randRadius*maxDistPenubraFactor;
-            vec2 ruv = vec2(0.5);
+            // float currentRandRadius = randRadius*maxDistPenubraFactor;
+            // vec2 ruv = vec2(0.5);
+            float currentRandRadius = randRadius;
+            vec2 ruv = vec2(sin(2.0*PI*float(i)/ESS_BASE_ITERATION) * cos(2.0*PI*float(i)/ESS_BASE_ITERATION));
             res += getShadowMapHit(dist, shadowmap, mapPosition.xyz, l, bias, currentRandRadius, ruv, float(i));
         }
 
         res /= ESS_BASE_ITERATION;
 
-        if(distance(res, 0.5) >= 0.4)
-        {
-            // color[2] = 300; 
-            // return res;
-        }
-        else
-            res = 0.0;
+        // if(distance(res, 0.5) >= 0.4)
+        // {
+        //     // color[2] = 300; 
+        //     // return res;
+        // }
+        // else
+        //     res = 0.0;
 
         // dist = 0.01;
         dist = smoothstep(0.001, 0.1, dist);
-        float currentRandRadius = randRadius * (1.0 + min(dist*256.0*maxDistPenubraFactor, maxDistPenubraFactor-1));
+        float currentRandRadius = randRadius;
+        currentRandRadius *= (1.0 + 0.25*min(dist*256.0*maxDistPenubraFactor, maxDistPenubraFactor-1)); 
         // currentRandRadius = randRadius*16.0;
 
 
@@ -204,7 +214,8 @@ float getCascadedShadow(sampler2DArray shadowmap, mat4 matrix[3], float nDotL)
             // float currentRandRadius = randRadius*16.0;
             // vec2 ruv = mapPosition.zz - mod(mapPosition.zz, vec2(0.00001));
             vec2 ruv = mapPosition.xy;
-            ruv = vec2(0.5);
+            // ruv = vec2(0.5);
+            ruv = vulpineHash2to2(vec2(2), float(i));
             res += getShadowMapHit(dist, shadowmap, mapPosition.xyz, l, bias, currentRandRadius, ruv, float(-i));
         }
 

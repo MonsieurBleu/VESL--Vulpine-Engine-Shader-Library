@@ -26,7 +26,7 @@ vec2 arCorrection = vec2(0);
 
 float drawCircle(vec2 inUv) {
     float l = length(inUv);
-    fragColor.a *= smoothstep(1.0, 1.0 - SMOOTHSTEP_BORDER, l);
+    fragColor.a *= smoothstep(1.0, 1.0 - borderSize*0.5, l);
     return l;
 }
 
@@ -92,9 +92,16 @@ void main() {
             break;
 
         case 2:
+
+            uvAR *= arCorrection;
+            border = drawCircle(uvAR * scale * 30.0)*0.00001;
+            // border = drawCircle(uvAR*1.1)*0.00001;
+
+
+            break;
+
         case 5 : 
             uvAR *= arCorrection;
-
             border = drawCircle(uvAR)*0.00001;
             break;
 

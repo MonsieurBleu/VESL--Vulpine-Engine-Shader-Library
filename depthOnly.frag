@@ -8,6 +8,12 @@
 #include Model3D 
 #include Ligths 
 
+#ifdef WATER
+#include Noise
+// in vec3 position;
+// in vec3 modelPosition;
+#endif
+
 // #ifdef ARB_BINDLESS_TEXTURE
 // layout (location = 20, bindless_sampler) uniform sampler2D bColor;
 // layout (location = 21, bindless_sampler) uniform sampler2D bMaterial;
@@ -37,8 +43,40 @@
 //     in vec2 uv;
 // #endif
 
+// #ifdef LEAF_PATCH
+//     in vec3 normal;
+// #endif
+
 void main()
 {
+    #ifdef WATER
+    // discard;
+    ivec2 iuv = ivec2(gl_FragCoord);
+
+    float n = snoise(position.xz*2.0 + _iTime);
+
+    // if(iuv.x%16 != 0) discard;
+
+    if(n > 0.0) discard;
+    
+    #endif
+
+    #ifdef LEAF_PATCH
+        // vec3 normalCs = normalize(cross(dFdx(position), dFdy(position)));
+
+        float d = length(normal);
+        // color.r = length(normal)*0.1;
+
+        // d = pow(d, 5000.0);
+        if(d >= 0.7)
+        {
+            // if(int(gl_FragCoord.x)%2 == 0)
+                discard;
+        }
+
+        // normalComposed = normalCs;
+    #endif
+
     return;
     // #ifdef LEAF_ALPHA
     // if(texture(bLeaf, clamp(uv, vec2(0), vec2(1))).r < 1e-6) discard;

@@ -12,6 +12,15 @@ layout (triangles, equal_spacing, ccw) in;
 #define USING_LOD_TESSELATION
 #define USING_VERTEX_PACKING
 
+layout(location = 36) uniform int   editorActive;
+layout(location = 37) uniform int   editoreditorTextureView;
+layout(location = 38) uniform float editorBrushRange;
+layout(location = 39) uniform vec3  editorBrushPos;
+layout(location = 40) uniform vec3  editorBrushColor;
+layout(location = 41) uniform float editorBrushForce;
+layout(location = 42) uniform float editorBrushIntensity;
+layout(location = 43) uniform int   target;
+
 #include Base3D 
 #include Model3D 
 #include Vertex3DOutputs 
@@ -19,6 +28,7 @@ layout (triangles, equal_spacing, ccw) in;
 #include Noise 
 #include HSV
 #include Hash
+#include Steps
 
 in vec2 patchUv[];
 in vec3 patchPosition[];
@@ -32,6 +42,7 @@ in vec3 patchNormal[];
 #else
     layout (binding = 2) uniform sampler2D bHeight;
     layout (binding = 3) uniform sampler2D bGrassyness;
+    layout (binding = 4) uniform sampler2D bEditorTexture;
 #endif
 
 #ifdef USING_TERRAIN_RENDERING
@@ -165,11 +176,11 @@ void main()
         // float dist = 2.0 * bias / lodHeightDispFactors.w;
         // dist *= 0.1;
         float dist = bias * 0.5 * (4096.0/384) * 0.5;
-        vec3 nP1 = normal*h; 
-        vec3 nP2 = normal*h3 + vec3(0.0, 0.0, dist); 
-        vec3 nP3 = normal*h1 + vec3(dist, 0.0, 0.0); 
-        vec3 nP4 = normal*h4 - vec3(0.0, 0.0, dist); 
-        vec3 nP5 = normal*h2 - vec3(dist, 0.0, 0.0); 
+        vec3 nP1 = 3.0*normal*h; 
+        vec3 nP2 = 3.0*normal*h3 + vec3(0.0, 0.0, dist); 
+        vec3 nP3 = 3.0*normal*h1 + vec3(dist, 0.0, 0.0); 
+        vec3 nP4 = 3.0*normal*h4 - vec3(0.0, 0.0, dist); 
+        vec3 nP5 = 3.0*normal*h2 - vec3(dist, 0.0, 0.0); 
         vec3 n1 = normalize(cross(nP2-nP1, nP3-nP1));
         vec3 n2 = normalize(cross(nP4-nP1, nP5-nP1));
         vec3 n3 = -normalize(cross(nP2-nP1, nP5-nP1));
@@ -180,6 +191,8 @@ void main()
             // +n3 
             +n4 
             );   
+
+        
     }
 
     /* Displacement Mapping, unsed for now
@@ -211,12 +224,13 @@ void main()
     vec4 factors = getTerrainFactorFromState(normal, terrainHeight);
 
     float grassyness = texture(bGrassyness, 0.5 + position.xz/4096.0).r;
-    factors[2] *= smoothstep(0.0, 0.04, grassyness);
+    factors[2] *= smoothstep(0.0, 0.2, grassyness);
     // factors[3] += 0.25*smoothstep(0.0, 0.25, grassyness);
 
     const vec3 dirtCOlor = hsv2rgb(vec3(0.1, 0.8, 0.2));
     const vec3 dirtCOlor2 = hsv2rgb(vec3(0.1, 0.7, 0.4));
     const vec3 grassColor = hsv2rgb(vec3(0.19, 1.0, 0.5));
+    // const vec3 grassColor = hsv2rgb(vec3(0.2, 1.0, 0.75));
     const vec3 rockColor = vec3(0xB4, 0xA1, 0x6E)/255.0;
     const vec3 snowColor = vec3(0xD0, 0xD0, 0xff)/255.0;
 
@@ -235,16 +249,17 @@ void main()
     vRoughness = 1.f;
     vRoughness = mix(vRoughness, 0.5, factors[2]);
     vRoughness = mix(vRoughness, 0.75, factors[3]);
-    vRoughness = mix(vRoughness, 0.25, factors[1]);
+    vRoughness = mix(vRoughness, 0.6, factors[1]);
     vRoughness = mix(vRoughness, 0.75, factors[0]);
 
     // vRoughness = 0.0;
 
-    // vMetalness = 0.0;
+    vMetalness = 1.0;
+    // vMetalness = mix(0.0, 1.0, factors[1]*5.0);
 
 
     bool doDetailedTerrain = true;
-    float dtd = smoothstep(128.0, 32.0, distance(_cameraPosition, position));
+    float dtd = smoothstep(256.0, 32.0, distance(_cameraPosition, position));
     doDetailedTerrain = dtd > 0.001;
     // doDetailedTerrain = false; 
 
@@ -255,6 +270,8 @@ void main()
     // vec3 cpos = _cameraPosition;
     // vcolor = vec3(distance(position, cpos).r, 0, 0);
     // vcolor = position/2048.0;
+
+    vec3 originalNormal = normal;
 
     if(doDetailedTerrain)
     {
@@ -289,7 +306,12 @@ void main()
 
         // sn *= 1.0-factors[1]*0.75;
 
-        position -= dtd*normal*sn2*0.125*(1.0 + factors[1]*1.0);
+        float off = dtd*sn2*(1.0 + factors[1]*1.0);
+        position -= off*normal*0.125;
+
+        // normal -= 0.125*off*sign(normal)/abs(normal.y);
+        normal -= 0.5*off*sign(normal)*(1.0-abs(normal.y));
+        normal = normalize(normal);
 
         // float vh = vulpineHash(position.xz, 0.0);
         // float vh = snoise(position*5.0 - 50.0)*0.5 + 0.5;
@@ -322,7 +344,178 @@ void main()
 
     position.z -= 0.5;
     position.x -= 0.5;
-    
+
+    // #ifdef SHOW_WORLD_REGIONS_HELPER
+    if(editorActive != 0)
+    {        
+        if(editoreditorTextureView != 0)
+        {
+
+            if(target > 0)
+            /* Grayscale Texture View */
+            {
+                vcolor = texture(bEditorTexture, uv).rrr;
+            }
+            else
+            /* Climbing Zone Visualisation  */ 
+            {
+                vRoughness = 1;
+                // vMetalness = 0;
+
+                // normal = normalize(normal);
+                // vcolor = normal*.5 + .5;
+                float angle = degrees(acos(originalNormal.y));
+
+                float lowAngle = 3.0;
+                float midAngle = 10.0;
+                float highAngle = 15.0;
+                float limitAngle = 20.0;
+
+                // vcolor = vec3(0, 0, 1);
+                // vcolor = vec3(0);
+                // vcolor = mix(vcolor, vec3(0.1), linearstep(50.0, 0.0, angle));
+                // vcolor = mix(vcolor, vec3(0, 1, 1), linearstep(lowAngle, midAngle, angle));
+                // vcolor = mix(vcolor, vec3(0, 1, 0), linearstep(midAngle, highAngle, angle));
+                // vcolor = mix(vcolor, vec3(0), linearstep(highAngle, limitAngle, angle));
+
+                if(normal.y < 1.)
+                {
+                    vec2 slopeDir = normalize(normal.xz);
+                    float bias = 0.25/4096.0;
+
+                    float maxIt = 16.;
+                    float size = 2.0/4096.f;
+
+                    float h = texture(bHeight, uv).r*512.f;
+
+
+                    float endFlatness = 0.;
+                    float beginFlatness = 0.;
+
+                    float endLast = h;
+                    float beginLast = h;
+
+                    float minH = h;
+                    float maxH = h;
+
+                    for(float i = maxIt; i > 0; i--)
+                    {
+                        float a = size*i/maxIt;
+
+                        float he = texture(bHeight, uv - slopeDir*a).r*512.f;
+                        float hb = texture(bHeight, uv + slopeDir*a).r*512.f;
+
+                        if(distance(he, endLast) < 0.05)
+                        {
+                            endFlatness = 1.0;
+
+                            // minH = min(he, minH);
+                            // maxH = max(he, maxH);
+                        }
+
+                        if(distance(hb, beginLast) < 0.05)
+                        {
+                            beginFlatness = 1.0;
+
+                            // minH = min(hb, minH);
+                            // maxH = max(hb, maxH);
+                        } 
+
+                        minH = min(hb, min(he, minH));
+                        maxH = max(hb, max(he, maxH));
+
+                        endLast = he;
+                        beginLast = hb;
+
+                    }
+
+                    float climbable = 1.0;
+
+                    climbable = beginFlatness*endFlatness;
+
+                    climbable *= step(normal.y, 0.9);
+
+                    climbable *= step(maxH-minH, 5.0);
+
+                    vec3 climbColor = hsv2rgb(vec3(
+                        smoothstep(5.0, 0.5, maxH-minH)*0.35,
+                        1.0, 1.0
+                    ));
+
+                    vcolor = vec3(0);
+                    vcolor = mix(vcolor, climbColor, climbable);
+
+
+                    vec3 slopeColor = hsv2rgb(vec3(
+                        0.35 + 0.3*linearstep(0.8, 1.0, normal.y),
+                        1.0, 1.0
+                    ));
+
+                    vcolor = mix(vcolor, slopeColor, step(0.8, normal.y));
+                    // vcolor = mix(vcolor, vec3(0, 0.5, 0.25), step(0.8, normal.y));
+
+                    // float lowLast = 0;
+                    // float highLast = 0;
+
+
+                    // // for(float i = ; i <= maxIt; i++)
+                    // for(float i = maxIt; i > 0; i--)
+                    // {
+                    //     float a = size*i/maxIt;
+
+                    //     float hLow = texture(bHeight, uv - slopeDir*a).r*512.f;
+                    //     float hHigh = texture(bHeight, uv + slopeDir*a).r*512.f;
+
+                    //     if(abs(lowLast - hLow) > 0.1)
+                    //         lowLast = hLow;
+
+                    //     if(abs(highLast - hHigh) > 0.5)
+                    //         highLast = hHigh;
+                    // }
+
+                    // vcolor = abs(lowLast-h).rrr*0.25 * step(0., lowLast);
+
+                    // float maxIt = 8.;
+                    // float d = 0.f;
+
+                    // for(float i = 1.0; i < maxIt; i++)
+                    // {
+                    //     float h1 = texture(bHeight, uv + slopeDir*bias*i).r;
+                    //     float h2 = texture(bHeight, uv - slopeDir*bias*i).r;
+                    //     float d2 = abs(h1-h2)*512.f;
+
+                    //     if(distance(d, d2) < 0.1/512.f)
+                    //         break;
+                        
+                    //     d = d2;
+                    // }
+
+                    // vec3 climbColor = vcolor;
+
+                    // climbColor = mix(climbColor, vec3(1, 1, 0), cubicstep(0.5, 1., d));
+                    // climbColor = mix(climbColor, vec3(1, 0.5, 0), cubicstep(1., 2., d));
+                    // climbColor = mix(climbColor, vec3(1, 0, 0), cubicstep(2., 3., d));
+                    // climbColor = mix(climbColor, vcolor, cubicstep(3., 3.25, d));
+
+                    // climbColor = mix(climbColor, vcolor, linearstep(0.91, 0.92 , normal.y));
+
+                    // vcolor = climbColor;
+                }
+            }
+        }
+
+        /*
+            Brush View 
+        */
+        float d = distance(vec2(position.x, position.z),vec2(editorBrushPos.x, editorBrushPos.z))/editorBrushRange;
+        d = smoothstep(1., editorBrushIntensity*0.99, d);
+        vcolor = mix(vcolor, editorBrushColor, clamp(d*editorBrushForce, 0.f ,1.f));
+        // vEmmisive = d;
+    }
+
+    // vcolor = abs(normal);
+
+    // #endif
 
     #ifdef USING_LAYERED_RENDERING
     gl_Position = vec4(position, 1.0);
