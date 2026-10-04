@@ -12,6 +12,10 @@
 #include Noise
 // in vec3 position;
 // in vec3 modelPosition;
+
+layout (binding = 4) uniform sampler2D bFlow;
+#include Water
+
 #endif
 
 // #ifdef ARB_BINDLESS_TEXTURE
@@ -51,14 +55,20 @@ void main()
 {
     #ifdef WATER
     // discard;
-    ivec2 iuv = ivec2(gl_FragCoord);
+    // ivec2 iuv = ivec2(gl_FragCoord);
 
-    float n = snoise(position.xz*2.0 + _iTime);
+    // float n = snoise(position.xz*2.0 + _iTime);
 
-    // if(iuv.x%16 != 0) discard;
+    // // if(iuv.x%16 != 0) discard;
 
-    if(n > 0.0) discard;
+    // if(n > 0.0) discard;
+
+    float h = waveHeight(position.xz, (position.xz+2048.0)/4096.0, 100.0);
     
+    // if(mod(h, 0.25) < 0.125) discard;
+
+    if(sin(h*12.0) > h) discard;
+
     #endif
 
     #ifdef LEAF_PATCH

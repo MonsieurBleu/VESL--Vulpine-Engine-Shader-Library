@@ -43,6 +43,7 @@ in vec3 patchNormal[];
     layout (binding = 2) uniform sampler2D bHeight;
     layout (binding = 3) uniform sampler2D bGrassyness;
     layout (binding = 4) uniform sampler2D bEditorTexture;
+    layout (binding = 5) uniform sampler2D bWaterLevel;
 #endif
 
 #ifdef USING_TERRAIN_RENDERING
@@ -97,10 +98,10 @@ void main()
 
     const float zero = 1e-9;
 
+    vec2 hUv = uv*lodHeightDispFactors.z;
+    float h = texture(bHeight, clamp(hUv, 0.001, 0.999)).r;
     if(lodHeightDispFactors.w > zero)
     {
-        vec2 hUv = uv*lodHeightDispFactors.z;
-        float h = texture(bHeight, clamp(hUv, 0.001, 0.999)).r;
         // h = textureLod(bHeight, clamp(hUv, 0.001, 0.999), 0).r;
         // h = 
         //     (
@@ -229,10 +230,15 @@ void main()
 
     const vec3 dirtCOlor = hsv2rgb(vec3(0.1, 0.8, 0.2));
     const vec3 dirtCOlor2 = hsv2rgb(vec3(0.1, 0.7, 0.4));
-    const vec3 grassColor = hsv2rgb(vec3(0.19, 1.0, 0.5));
+    vec3 grassColor = hsv2rgb(vec3(0.19, 1.0, 0.5));
     // const vec3 grassColor = hsv2rgb(vec3(0.2, 1.0, 0.75));
     const vec3 rockColor = vec3(0xB4, 0xA1, 0x6E)/255.0;
     const vec3 snowColor = vec3(0xD0, 0xD0, 0xff)/255.0;
+
+    float waterLevel = texture(bWaterLevel, 0.5 + position.xz/4096.0).r*512.0;
+    float isInWater = step(h*512.0, waterLevel);
+
+    grassColor = mix(grassColor, hsv2rgb(vec3(0.4, 0.5, 0.25)), isInWater);
 
     vcolor = dirtCOlor2;
 
@@ -252,7 +258,7 @@ void main()
     vRoughness = mix(vRoughness, 0.6, factors[1]);
     vRoughness = mix(vRoughness, 0.75, factors[0]);
 
-    // vRoughness = 0.0;
+    vRoughness = 0.5;
 
     vMetalness = 1.0;
     // vMetalness = mix(0.0, 1.0, factors[1]*5.0);
