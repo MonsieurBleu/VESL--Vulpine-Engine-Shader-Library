@@ -145,6 +145,8 @@ void main()
             level = mix(level, 12.0,  step(dist, 256.0));
             level = mix(level, 24.0,  step(dist, 128.0));
             level = mix(level, 48.0,  step(dist, 64.0));
+
+            // level = mix(level, 64.0,  step(dist, 16.0));
             
             // level = mix(level, 2.0,   step(dist, 1024.0));
             // level = mix(level, 4.0,   step(dist, 256.0));

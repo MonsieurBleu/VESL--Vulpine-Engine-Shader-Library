@@ -31,6 +31,9 @@ float drawCircle(vec2 inUv) {
 }
 
 float drawSquareRounded(float cornerSize, vec2 inUv) {
+
+    cornerSize = min(cornerSize, scale*64.0);
+
     inUv = abs(inUv * arCorrection);
     vec2 c = arCorrection - cornerSize;
 
@@ -75,6 +78,8 @@ void main() {
     // vec2 size = 
 
     borderSize = borderSize / (scale);
+    // borderSize *= 32.0;
+
     // borderSize *= aspectRatio > 1. ? 0.1 * aspectRatio / scale : scale ;
 
     // borderSize = max(borderSize, 0.01);

@@ -30,6 +30,8 @@ layout(location = 43) uniform int   target;
 #include Hash
 #include Steps
 
+#include Terrain
+
 in vec2 patchUv[];
 in vec3 patchPosition[];
 in vec3 patchNormal[];
@@ -44,6 +46,9 @@ in vec3 patchNormal[];
     layout (binding = 3) uniform sampler2D bGrassyness;
     layout (binding = 4) uniform sampler2D bEditorTexture;
     layout (binding = 5) uniform sampler2D bWaterLevel;
+    layout (binding = 6) uniform sampler2D bHumidity;
+    layout (binding = 7) uniform sampler2D bMystic;
+    layout (binding = 8) uniform sampler2D bCorruption;
 #endif
 
 #ifdef USING_TERRAIN_RENDERING
@@ -222,22 +227,45 @@ void main()
     // position -= normal*0.5 * vec3(1, 0, 1);
 
 
+
     vec4 factors = getTerrainFactorFromState(normal, terrainHeight);
 
+    float humidity = texture(bHumidity, hUv).r; 
     float grassyness = texture(bGrassyness, 0.5 + position.xz/4096.0).r;
-    factors[2] *= smoothstep(0.0, 0.2, grassyness);
+    float mystic = texture(bMystic, hUv).r;
+    float corruption = texture(bCorruption, hUv).r;
+    // factors[2] *= smoothstep(0.0, 0.2, grassyness);
     // factors[3] += 0.25*smoothstep(0.0, 0.25, grassyness);
 
     const vec3 dirtCOlor = hsv2rgb(vec3(0.1, 0.8, 0.2));
-    const vec3 dirtCOlor2 = hsv2rgb(vec3(0.1, 0.7, 0.4));
-    vec3 grassColor = hsv2rgb(vec3(0.19, 1.0, 0.5));
+    
+    const vec3 dirtCOlor2 = mix(
+        hsv2rgb(vec3(0.1, 0.7, 0.4)),
+        hsv2rgb(vec3(0.1, 0.7, 0.6)),
+        corruption
+    );
+
+    vec3 grassColor = mix(
+        hsv2rgb(vec3(0.19, 1.0, 0.5)),
+        hsv2rgb(vec3(0.06, 1.0, 0.5)),
+        corruption
+    );
+
+
     // const vec3 grassColor = hsv2rgb(vec3(0.2, 1.0, 0.75));
-    const vec3 rockColor = vec3(0xB4, 0xA1, 0x6E)/255.0;
+    const vec3 rockColor = mix(
+        vec3(0xB4, 0xA1, 0x6E)/255.0,
+        hsv2rgb(vec3(0.12, 0.3, 0.6)),
+        corruption
+    );
+
     const vec3 snowColor = vec3(0xD0, 0xD0, 0xff)/255.0;
 
     float waterLevel = texture(bWaterLevel, 0.5 + position.xz/4096.0).r*512.0;
     float isInWater = step(h*512.0, waterLevel);
 
+    grassColor = mix(dirtCOlor2, grassColor, smoothstep(0.0, 0.25, grassyness));
+    // grassColor = mix(grassColor, rockColor, smoothstep(1.0, 0.5, normal.y));
     grassColor = mix(grassColor, hsv2rgb(vec3(0.4, 0.5, 0.25)), isInWater);
 
     vcolor = dirtCOlor2;
@@ -258,7 +286,7 @@ void main()
     vRoughness = mix(vRoughness, 0.6, factors[1]);
     vRoughness = mix(vRoughness, 0.75, factors[0]);
 
-    vRoughness = 0.5;
+    vRoughness = 0.75;
 
     vMetalness = 1.0;
     // vMetalness = mix(0.0, 1.0, factors[1]*5.0);
@@ -279,6 +307,8 @@ void main()
 
     vec3 originalNormal = normal;
 
+    
+    if(false)
     if(doDetailedTerrain)
     {
         float sn = snoise(position*2.0 * 1.0)*0.5;
@@ -342,6 +372,28 @@ void main()
         vcolor = hsv2rgb(rgb2hsv(vcolor) * (1.0 + factors[1]*dtd*sn2*2.0*vec3(0.01, -0.1, -0.1)));
     }
 
+    // if(false)
+    // if(doDetailedTerrain)
+    {
+        vec2 s = highFreqTerrain(position.xz);
+
+        position += s.x*normal*(1.0 - 0.85*min(normal.y*0.4, humidity));
+
+        // vcolor = mix(rockColor, vcolor, humidity);
+
+        vec3 highDepthColor = mix(rockColor, vcolor, humidity);
+        vec3 lowDepthColor = mix(grassColor, dirtCOlor, humidity);
+
+        vcolor = mix(highDepthColor, lowDepthColor, 0.7*smoothstep(-0.5, -1.5, s.y));
+
+        // vcolor = mix(dirtCOlor2, dirtCOlor, 0.7*smoothstep(-0.5, -1.5, s.y));
+
+        // vcolor = vec3(s.y);
+
+        vMetalness = 1.;
+        vRoughness = 0.8;
+    }
+
     
     // vcolor = grassyness.rrr;
 
@@ -354,7 +406,7 @@ void main()
     // #ifdef SHOW_WORLD_REGIONS_HELPER
     if(editorActive != 0)
     {        
-        if(editoreditorTextureView != 0)
+        if(editoreditorTextureView != 0 && target != 1 && target != 2)
         {
 
             if(target > 0)
@@ -453,7 +505,7 @@ void main()
 
 
                     vec3 slopeColor = hsv2rgb(vec3(
-                        0.35 + 0.3*linearstep(0.8, 1.0, normal.y),
+                        0.2 + 0.2*linearstep(0.8, 1.0, normal.y),
                         1.0, 1.0
                     ));
 
