@@ -384,7 +384,7 @@ void main()
         vec3 highDepthColor = mix(rockColor, vcolor, humidity);
         vec3 lowDepthColor = mix(grassColor, dirtCOlor, humidity);
 
-        vcolor = mix(highDepthColor, lowDepthColor, 0.7*smoothstep(-0.5, -1.5, s.y));
+        vcolor = mix(highDepthColor, lowDepthColor, 0.7*smoothstep(-0.5, -1.5, s.y)*smoothstep(0.5, 1.0, normal.y));
 
         // vcolor = mix(dirtCOlor2, dirtCOlor, 0.7*smoothstep(-0.5, -1.5, s.y));
 
