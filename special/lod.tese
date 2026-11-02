@@ -255,7 +255,8 @@ void main()
     // const vec3 grassColor = hsv2rgb(vec3(0.2, 1.0, 0.75));
     const vec3 rockColor = mix(
         vec3(0xB4, 0xA1, 0x6E)/255.0,
-        hsv2rgb(vec3(0.12, 0.3, 0.6)),
+        // hsv2rgb(vec3(0.12, 0.3, 0.6)),
+        hsv2rgb(vec3(0.12, 0.4, 0.4)),
         corruption
     );
 
@@ -289,6 +290,9 @@ void main()
     vRoughness = 0.75;
 
     vMetalness = 1.0;
+
+    // vEmmisive = 0.0;
+
     // vMetalness = mix(0.0, 1.0, factors[1]*5.0);
 
 
@@ -377,7 +381,7 @@ void main()
     {
         vec2 s = highFreqTerrain(position.xz);
 
-        position += s.x*normal*(1.0 - 0.85*min(normal.y*0.4, humidity));
+        position += s.x*normal*(1.0 - 0.85*min(normal.y*0.8, humidity));
 
         // vcolor = mix(rockColor, vcolor, humidity);
 
@@ -567,8 +571,12 @@ void main()
         */
         float d = distance(vec2(position.x, position.z),vec2(editorBrushPos.x, editorBrushPos.z))/editorBrushRange;
         d = smoothstep(1., editorBrushIntensity*0.99, d);
+
+        // d *= smoothstep(0.4, 0.5, fract(position.x));
+        // d *= smoothstep(0.4, 0.5, fract(position.z));
+
         vcolor = mix(vcolor, editorBrushColor, clamp(d*editorBrushForce, 0.f ,1.f));
-        // vEmmisive = d;
+        // vEmmisive = d*0.5;
     }
 
     // vcolor = abs(normal);

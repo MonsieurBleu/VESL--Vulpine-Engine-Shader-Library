@@ -37,6 +37,10 @@ layout (binding = 4) uniform sampler2D bFlow;
     in vec3 modelNormal;
 #endif
 
+#ifdef HAIR
+    in vec3 normalG;
+#endif
+
 // #ifdef LEAF
 //     #ifdef ARB_BINDLESS_TEXTURE
 //         layout (location = 20, bindless_sampler) uniform sampler2D bLeaf;
@@ -85,6 +89,11 @@ void main()
         }
 
         // normalComposed = normalCs;
+    #endif
+
+    #ifdef HAIR
+    if(normalG.y > normalG.x)
+        discard;
     #endif
 
     return;

@@ -123,6 +123,8 @@ Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
 
     #ifdef CELL_SHADING
     specular = mix(specular, color*specular, 0.9);
+    // specular *= vec3(1, 0, 0);
+    specular *= pow(lightColor, vec3(4.0));
     #endif
     
     Material result;
@@ -165,7 +167,7 @@ Material getLighting(vec3 lightDirection, vec3 lightColor, float sss)
     #ifdef CELL_SHADING
     sssColor = rgb2hsv(sssColor);
 
-    sssColor += sss*vec3(-0.05 + cellShadingSeed.z*0.05, 0.3, 0.4);
+    sssColor += sss*vec3(-0.05 + cellShadingSeed.z*0.05, 0.3, 0.4)*(0.1 + sssColor.b);
 
     sssColor = hsv2rgb(sssColor);
 

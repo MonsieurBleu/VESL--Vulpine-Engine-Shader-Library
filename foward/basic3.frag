@@ -1,5 +1,7 @@
 #version 460
 
+// layout(early_fragment_tests) in;
+
 #include SceneDefines3D 
 
 #ifndef USING_INSTANCING
