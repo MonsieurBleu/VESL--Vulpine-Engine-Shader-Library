@@ -22,7 +22,13 @@ modelPosition *= vec3(length(vec3(modelMatrix[0])), length(vec3(modelMatrix[1]))
 #else
     // position.y -= 12e5;
 
-    position.y -= 10e5;
+    // position.y -= 10e5;
+
+    // position.y -= 10e5;
+
+    // position.y -= 7e5;
+
+    position.y -= 3e5;
 
     // position.y = max(0., position.y);
 
@@ -33,6 +39,7 @@ modelPosition *= vec3(length(vec3(modelMatrix[0])), length(vec3(modelMatrix[1]))
 
 
 #ifdef DO_FAKE_PLANET_CURVATURE
+#ifndef GRASS_PATCH
 {
     #ifdef IN_SKYBOX_MESH
     const float planetSize = PLANET_SIZE * 64 * 4.;
@@ -42,7 +49,11 @@ modelPosition *= vec3(length(vec3(modelMatrix[0])), length(vec3(modelMatrix[1]))
 
     vec2 pc = position.xz - _cameraPosition.xz;
     float d = planetSize * (sqrt(1.0 - dot(pc, pc)/(planetSize*planetSize)) - 1.0);
-    position.y += d * smoothstep(1, 5, d);
+
+    // position.y += d * smoothstep(1, 5, d);
+
+    position.y += d;
+
 
     #ifdef IN_SKYBOX_MESH
     position.y += 9e4;
@@ -66,4 +77,5 @@ modelPosition *= vec3(length(vec3(modelMatrix[0])), length(vec3(modelMatrix[1]))
 
     #endif
 }
+#endif
 #endif
